@@ -8,18 +8,24 @@ use App\Models\Contact;
 use App\Models\Document;
 use App\Models\Item;
 use App\Models\Payment;
+use App\Models\PersonalAccessToken;
 use App\Models\Receipt;
 use App\Models\User;
 use App\Observers\AuditObserver;
 use App\Support\Csp;
 use App\Support\CurrentCompany;
+use App\Support\PlanEntitlements;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(CurrentCompany::class);
         // One nonce per request, shared by the header and every inline script.
         $this->app->singleton(Csp::class);
+
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
     }
 
     public function boot(): void
@@ -58,6 +66,23 @@ class AppServiceProvider extends ServiceProvider
         Vite::useCspNonce($nonce);
 
         Date::use(Carbon::class);
+
+        /*
+         * Keyed by token, not by user or IP: two tokens for the same user (say,
+         * a browser session and an integration key) must not share one bucket,
+         * and an unauthenticated request never reaches here — `auth:sanctum`
+         * runs first in the priority list and rejects it before the limiter is
+         * consulted. The limit itself comes from the token's company's plan, so
+         * it has to be read straight off the token here rather than from
+         * CurrentCompany — ThrottleRequests runs before ResolveApiCompany in
+         * the middleware priority list, so CurrentCompany is not set yet.
+         */
+        RateLimiter::for('api', function (Request $request) {
+            $token = $request->user()?->currentAccessToken();
+            $perMinute = $token?->company ? PlanEntitlements::apiRateLimit($token->company) : 60;
+
+            return Limit::perMinute($perMinute)->by($token?->id ?? $request->ip());
+        });
 
         // Token-styled pagination; the framework default hardcodes grays that
         // break in dark mode.

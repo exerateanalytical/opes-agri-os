@@ -24,7 +24,7 @@ class LandingPageTest extends TestCase
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('Opes Agri OS', false)
+            ->assertSee('OPES AGRI OS', false)
             ->assertSee('3,000', false);
     }
 

@@ -62,6 +62,24 @@ class PlanEntitlements
         'payroll' => 'business',
     ];
 
+    /**
+     * API requests allowed per minute, per token, for a company's plan.
+     *
+     * Tracks the same tiers the pricing page sells rather than being a flat
+     * platform-wide number: a Business-plan integration doing real volume
+     * should not queue behind a Basic-plan storefront's one register.
+     */
+    protected const API_REQUESTS_PER_MINUTE = [
+        'basic' => 60,
+        'growth' => 300,
+        'business' => 1200,
+    ];
+
+    public static function apiRateLimit(Company $company): int
+    {
+        return self::API_REQUESTS_PER_MINUTE[$company->plan] ?? self::API_REQUESTS_PER_MINUTE['basic'];
+    }
+
     /** The amount due in XAF for one plan billed on one cycle. */
     public static function priceFor(string $plan, string $billingCycle = 'monthly'): int
     {

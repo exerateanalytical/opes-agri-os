@@ -1,6 +1,8 @@
 <?php
 
+use App\Exceptions\ApiExceptionRenderer;
 use App\Http\Middleware\EnsurePlatformAdminRole;
+use App\Http\Middleware\ResolveApiCompany;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetCurrentCompany;
 use Illuminate\Auth\Middleware\Authenticate;
@@ -23,6 +25,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -64,6 +67,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin.role' => EnsurePlatformAdminRole::class,
+            'api.company' => ResolveApiCompany::class,
         ]);
 
         /*
@@ -83,11 +87,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeaders::class);
 
         /*
-         * SetCurrentCompany must run after auth (it reads the user) but BEFORE
-         * route model binding — bindings resolve through the tenant scope, and
-         * with no company set the scope fails closed, so every scoped binding
-         * would 404. Appending to the web group alone puts it after
-         * SubstituteBindings; this priority list corrects that.
+         * SetCurrentCompany/ResolveApiCompany must run after auth (they read the
+         * user) but BEFORE route model binding — bindings resolve through the
+         * tenant scope, and with no company set the scope fails closed, so every
+         * scoped binding would 404. Appending to the web/api group alone puts
+         * them after SubstituteBindings; this priority list corrects that.
          */
         $middleware->priority([
             HandlePrecognitiveRequests::class,
@@ -100,10 +104,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ThrottleRequestsWithRedis::class,
             AuthenticatesSessions::class,
             SetCurrentCompany::class,
+            ResolveApiCompany::class,
             SubstituteBindings::class,
             Authorize::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(fn (\Throwable $e, \Illuminate\Http\Request $request) => app(ApiExceptionRenderer::class)->render($e, $request));
     })->create();

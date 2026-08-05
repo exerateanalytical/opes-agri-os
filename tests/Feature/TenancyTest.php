@@ -8,6 +8,7 @@ use App\Models\CompanyNote;
 use App\Models\CompanyUserPermission;
 use App\Models\Concerns\BelongsToCompany;
 use App\Models\Contact;
+use App\Models\PersonalAccessToken;
 use App\Models\User;
 use App\Support\CurrentCompany;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -118,6 +119,14 @@ class TenancyTest extends TestCase
             // no business user or company-scoped query ever touches this table.
             // Same rationale as ActivityLog above.
             CompanyNote::class,
+
+            // Looked up by Sanctum's guard on every API request, before
+            // ResolveApiCompany has run — that lookup is what determines the
+            // company in the first place. A global scope reading CurrentCompany
+            // would fail closed on every token authentication attempt. Every
+            // other read goes through the tokenable user's own relation or an
+            // explicit company_id match (see ResolveApiCompany), never the scope.
+            PersonalAccessToken::class,
         ];
 
         $files = glob(app_path('Models/*.php'));
