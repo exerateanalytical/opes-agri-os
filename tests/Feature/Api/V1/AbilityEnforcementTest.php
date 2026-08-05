@@ -6,6 +6,7 @@ use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\CropCycle;
 use App\Models\Document;
 use App\Models\Farm;
 use App\Models\Field;
@@ -64,6 +65,8 @@ class AbilityEnforcementTest extends TestCase
     protected Field $field;
 
     protected Season $season;
+
+    protected CropCycle $cropCycle;
 
     protected function setUp(): void
     {
@@ -125,6 +128,7 @@ class AbilityEnforcementTest extends TestCase
         $this->farm = Farm::create(['name' => 'A Farm']);
         $this->field = Field::create(['farm_id' => $this->farm->id, 'name' => 'A Field']);
         $this->season = Season::create(['name' => 'A Season', 'starts_on' => now()->toDateString()]);
+        $this->cropCycle = CropCycle::create(['field_id' => $this->field->id, 'season_id' => $this->season->id, 'item_id' => $this->item->id]);
     }
 
     /** @return array<int, array{method: string, uri: string}> */
@@ -166,6 +170,11 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'GET', 'uri' => "/api/v1/seasons/{$this->season->id}"],
             ['method' => 'PATCH', 'uri' => "/api/v1/seasons/{$this->season->id}"],
             ['method' => 'DELETE', 'uri' => "/api/v1/seasons/{$this->season->id}"],
+            ['method' => 'GET', 'uri' => '/api/v1/crop-cycles'],
+            ['method' => 'POST', 'uri' => '/api/v1/crop-cycles'],
+            ['method' => 'GET', 'uri' => "/api/v1/crop-cycles/{$this->cropCycle->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/crop-cycles/{$this->cropCycle->id}"],
+            ['method' => 'POST', 'uri' => "/api/v1/crop-cycles/{$this->cropCycle->id}/harvest"],
         ];
     }
 

@@ -62,6 +62,7 @@ class Permissions
         // since one role always administers all of it. See
         // docs/architecture/agri-platform-roadmap.md.
         'Farms' => ['view', 'create', 'update', 'delete'],
+        'Crops' => ['view', 'create', 'update', 'record-harvest'],
     ];
 
     /**

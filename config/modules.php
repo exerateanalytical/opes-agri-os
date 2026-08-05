@@ -3,6 +3,7 @@
 use App\Models\BankAccount;
 use App\Models\BusinessDocument;
 use App\Models\Contact;
+use App\Models\CropCycle;
 use App\Models\Document;
 use App\Models\Employee;
 use App\Models\Event;
@@ -219,6 +220,18 @@ return [
         'default' => true,
         'groups' => ['farms'],
         'models' => [Farm::class, Field::class, Season::class],
+    ],
+
+    'crops' => [
+        'label' => 'Crop management',
+        'description' => 'Planting plans, growth tracking and harvests, field by field.',
+        'icon' => 'cube',
+        'default' => true,
+        // A planting needs a field to plant in. There is nothing to track
+        // without one.
+        'requires' => ['farms'],
+        'groups' => ['crops'],
+        'models' => [CropCycle::class],
     ],
 
     /*

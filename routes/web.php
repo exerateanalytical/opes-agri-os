@@ -25,6 +25,7 @@ use App\Livewire\Business\Logo as BusinessLogo;
 use App\Livewire\Business\Reviews as BusinessReviews;
 use App\Livewire\Business\Stationery;
 use App\Livewire\CalendarPage\Index as CalendarIndex;
+use App\Livewire\Crops\Index as CropsIndex;
 use App\Livewire\Customers\Form as CustomerForm;
 use App\Livewire\Customers\Index as CustomersIndex;
 use App\Livewire\Customers\Show as CustomerShow;
@@ -236,6 +237,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('can:accounting.view')->name('accounting.declarations');
     Route::get('/assets', AssetsIndex::class)->middleware('can:assets.view')->name('assets');
     Route::get('/farms', FarmsIndex::class)->middleware('can:farms.view')->name('farms');
+    Route::get('/crops', CropsIndex::class)->middleware('can:crops.view')->name('crops');
     Route::get('/banking', BankingIndex::class)->middleware('can:banking.view')->name('banking');
 
     /*

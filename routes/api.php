@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Agri\Http\Controllers\Api\V1\CropCycleController;
 use App\Domain\Agri\Http\Controllers\Api\V1\FarmController;
 use App\Domain\Agri\Http\Controllers\Api\V1\FieldController;
 use App\Domain\Agri\Http\Controllers\Api\V1\SeasonController;
@@ -101,4 +102,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         Route::delete('/fields/{field}', [FieldController::class, 'destroy'])->name('api.v1.fields.destroy');
         Route::delete('/seasons/{season}', [SeasonController::class, 'destroy'])->name('api.v1.seasons.destroy');
     });
+
+    Route::middleware('abilities:crops.view')->group(function () {
+        Route::get('/crop-cycles', [CropCycleController::class, 'index'])->name('api.v1.crop-cycles.index');
+        Route::get('/crop-cycles/{cropCycle}', [CropCycleController::class, 'show'])->name('api.v1.crop-cycles.show');
+    });
+    Route::post('/crop-cycles', [CropCycleController::class, 'store'])
+        ->middleware('abilities:crops.create')->name('api.v1.crop-cycles.store');
+    Route::patch('/crop-cycles/{cropCycle}', [CropCycleController::class, 'update'])
+        ->middleware('abilities:crops.update')->name('api.v1.crop-cycles.update');
+    Route::post('/crop-cycles/{cropCycle}/harvest', [CropCycleController::class, 'harvest'])
+        ->middleware('abilities:crops.record-harvest')->name('api.v1.crop-cycles.harvest');
 });

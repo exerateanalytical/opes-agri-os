@@ -50,6 +50,7 @@ class RolePermissionSeeder extends Seeder
             'Devices' => ['view'],
             'Settings' => ['view'],
             'Farms' => ['view', 'create', 'update'],
+            'Crops' => ['view', 'create', 'update', 'record-harvest'],
         ]],
         'accountant' => ['name' => 'Accountant', 'level' => 4, 'grants' => [
             'Business' => ['view'],
@@ -79,6 +80,7 @@ class RolePermissionSeeder extends Seeder
             'Accounting' => ['view', 'export', 'manage'],
             'Settings' => ['view'],
             'Farms' => ['view'],
+            'Crops' => ['view'],
         ]],
         'sales-officer' => ['name' => 'Sales Officer', 'level' => 5, 'grants' => [
             'Business' => ['view'],
@@ -129,6 +131,7 @@ class RolePermissionSeeder extends Seeder
             'Loyalty' => ['view'],
             'Reports' => ['view'],
             'Farms' => ['view'],
+            'Crops' => ['view'],
         ]],
     ];
 

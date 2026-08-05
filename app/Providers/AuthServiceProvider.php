@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Artisan;
 use App\Models\BusinessDocument;
 use App\Models\Contact;
+use App\Models\CropCycle;
 use App\Models\Document;
 use App\Models\Event;
 use App\Models\Farm;
@@ -19,6 +20,7 @@ use App\Models\User;
 use App\Policies\ArtisanPolicy;
 use App\Policies\BusinessDocumentPolicy;
 use App\Policies\ContactPolicy;
+use App\Policies\CropCyclePolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\EventPolicy;
 use App\Policies\FarmPolicy;
@@ -55,6 +57,7 @@ class AuthServiceProvider extends ServiceProvider
         Farm::class => FarmPolicy::class,
         Field::class => FieldPolicy::class,
         Season::class => SeasonPolicy::class,
+        CropCycle::class => CropCyclePolicy::class,
     ];
 
     public function boot(): void
