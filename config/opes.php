@@ -63,6 +63,7 @@ return [
         ['key' => 'customers', 'label' => 'Customers', 'icon' => 'user', 'route' => 'customers', 'primary' => true, 'ability' => 'customers.view'],
         ['key' => 'business', 'label' => 'Business', 'icon' => 'briefcase', 'route' => 'business', 'primary' => true, 'ability' => 'business.view'],
         ['key' => 'products', 'label' => 'Products', 'icon' => 'cube', 'route' => 'products', 'ability' => 'products.view'],
+        ['key' => 'farms', 'label' => 'Farms', 'icon' => 'briefcase', 'route' => 'farms', 'ability' => 'farms.view'],
         ['key' => 'papers', 'label' => 'Documents', 'icon' => 'document', 'route' => 'papers', 'ability' => 'papers.view'],
         ['key' => 'forms', 'label' => 'Forms', 'icon' => 'clipboard', 'route' => 'forms', 'ability' => 'forms.view'],
         ['key' => 'events', 'label' => 'Events', 'icon' => 'ticket', 'route' => 'events', 'ability' => 'events.view'],

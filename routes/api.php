@@ -1,5 +1,8 @@
 <?php
 
+use App\Domain\Agri\Http\Controllers\Api\V1\FarmController;
+use App\Domain\Agri\Http\Controllers\Api\V1\FieldController;
+use App\Domain\Agri\Http\Controllers\Api\V1\SeasonController;
 use App\Domain\Sales\Http\Controllers\Api\V1\ContactController;
 use App\Domain\Sales\Http\Controllers\Api\V1\DocumentController;
 use App\Domain\Sales\Http\Controllers\Api\V1\DocumentLifecycleController;
@@ -73,5 +76,29 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
     Route::middleware('abilities:payments.view')->group(function () {
         Route::get('/payments', [PaymentController::class, 'index'])->name('api.v1.payments.index');
         Route::get('/payments/{payment}', [PaymentController::class, 'show'])->name('api.v1.payments.show');
+    });
+
+    Route::middleware('abilities:farms.view')->group(function () {
+        Route::get('/farms', [FarmController::class, 'index'])->name('api.v1.farms.index');
+        Route::get('/farms/{farm}', [FarmController::class, 'show'])->name('api.v1.farms.show');
+        Route::get('/fields', [FieldController::class, 'index'])->name('api.v1.fields.index');
+        Route::get('/fields/{field}', [FieldController::class, 'show'])->name('api.v1.fields.show');
+        Route::get('/seasons', [SeasonController::class, 'index'])->name('api.v1.seasons.index');
+        Route::get('/seasons/{season}', [SeasonController::class, 'show'])->name('api.v1.seasons.show');
+    });
+    Route::middleware('abilities:farms.create')->group(function () {
+        Route::post('/farms', [FarmController::class, 'store'])->name('api.v1.farms.store');
+        Route::post('/fields', [FieldController::class, 'store'])->name('api.v1.fields.store');
+        Route::post('/seasons', [SeasonController::class, 'store'])->name('api.v1.seasons.store');
+    });
+    Route::middleware('abilities:farms.update')->group(function () {
+        Route::patch('/farms/{farm}', [FarmController::class, 'update'])->name('api.v1.farms.update');
+        Route::patch('/fields/{field}', [FieldController::class, 'update'])->name('api.v1.fields.update');
+        Route::patch('/seasons/{season}', [SeasonController::class, 'update'])->name('api.v1.seasons.update');
+    });
+    Route::middleware('abilities:farms.delete')->group(function () {
+        Route::delete('/farms/{farm}', [FarmController::class, 'destroy'])->name('api.v1.farms.destroy');
+        Route::delete('/fields/{field}', [FieldController::class, 'destroy'])->name('api.v1.fields.destroy');
+        Route::delete('/seasons/{season}', [SeasonController::class, 'destroy'])->name('api.v1.seasons.destroy');
     });
 });

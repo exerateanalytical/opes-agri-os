@@ -49,6 +49,7 @@ class RolePermissionSeeder extends Seeder
             'Users' => ['view'],
             'Devices' => ['view'],
             'Settings' => ['view'],
+            'Farms' => ['view', 'create', 'update'],
         ]],
         'accountant' => ['name' => 'Accountant', 'level' => 4, 'grants' => [
             'Business' => ['view'],
@@ -77,6 +78,7 @@ class RolePermissionSeeder extends Seeder
             // The books are the accountant's job before anyone else's.
             'Accounting' => ['view', 'export', 'manage'],
             'Settings' => ['view'],
+            'Farms' => ['view'],
         ]],
         'sales-officer' => ['name' => 'Sales Officer', 'level' => 5, 'grants' => [
             'Business' => ['view'],
@@ -126,6 +128,7 @@ class RolePermissionSeeder extends Seeder
             'Events' => ['view'],
             'Loyalty' => ['view'],
             'Reports' => ['view'],
+            'Farms' => ['view'],
         ]],
     ];
 

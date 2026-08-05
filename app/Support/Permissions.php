@@ -58,6 +58,10 @@ class Permissions
         'Users' => ['view', 'invite', 'update-role', 'remove'],
         'Devices' => ['view', 'revoke'],
         'Settings' => ['view', 'update'],
+        // Farms, fields and seasons together — one group rather than three,
+        // since one role always administers all of it. See
+        // docs/architecture/agri-platform-roadmap.md.
+        'Farms' => ['view', 'create', 'update', 'delete'],
     ];
 
     /**

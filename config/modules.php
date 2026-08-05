@@ -7,6 +7,8 @@ use App\Models\Document;
 use App\Models\Employee;
 use App\Models\Event;
 use App\Models\Expense;
+use App\Models\Farm;
+use App\Models\Field;
 use App\Models\FixedAsset;
 use App\Models\Form;
 use App\Models\Item;
@@ -15,6 +17,7 @@ use App\Models\Payment;
 use App\Models\PayrollRun;
 use App\Models\Payslip;
 use App\Models\Receipt;
+use App\Models\Season;
 use App\Models\StockLocation;
 use App\Models\Stocktake;
 use App\Models\Ticket;
@@ -207,6 +210,15 @@ return [
         'icon' => 'chart-bar',
         'default' => true,
         'groups' => ['reports'],
+    ],
+
+    'farms' => [
+        'label' => 'Farm & land management',
+        'description' => 'Farms, their fields and plots, and the seasons you plan around.',
+        'icon' => 'briefcase',
+        'default' => true,
+        'groups' => ['farms'],
+        'models' => [Farm::class, Field::class, Season::class],
     ],
 
     /*

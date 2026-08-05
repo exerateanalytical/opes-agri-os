@@ -35,6 +35,7 @@ use App\Livewire\Events\Index as EventsIndex;
 use App\Livewire\Events\Manage as EventsManage;
 use App\Livewire\Events\Show as EventsShow;
 use App\Livewire\Expenses\Index as ExpensesIndex;
+use App\Livewire\Farms\Index as FarmsIndex;
 use App\Livewire\Forms\Builder as FormsBuilder;
 use App\Livewire\Forms\Index as FormsIndex;
 use App\Livewire\Forms\Responses as FormsResponses;
@@ -234,6 +235,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/accounting/declarations', AccountingDeclarations::class)
         ->middleware('can:accounting.view')->name('accounting.declarations');
     Route::get('/assets', AssetsIndex::class)->middleware('can:assets.view')->name('assets');
+    Route::get('/farms', FarmsIndex::class)->middleware('can:farms.view')->name('farms');
     Route::get('/banking', BankingIndex::class)->middleware('can:banking.view')->name('banking');
 
     /*

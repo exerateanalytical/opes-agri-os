@@ -7,10 +7,13 @@ use App\Models\BusinessDocument;
 use App\Models\Contact;
 use App\Models\Document;
 use App\Models\Event;
+use App\Models\Farm;
+use App\Models\Field;
 use App\Models\Form;
 use App\Models\Item;
 use App\Models\Payment;
 use App\Models\Receipt;
+use App\Models\Season;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Policies\ArtisanPolicy;
@@ -18,10 +21,13 @@ use App\Policies\BusinessDocumentPolicy;
 use App\Policies\ContactPolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\EventPolicy;
+use App\Policies\FarmPolicy;
+use App\Policies\FieldPolicy;
 use App\Policies\FormPolicy;
 use App\Policies\ItemPolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\ReceiptPolicy;
+use App\Policies\SeasonPolicy;
 use App\Policies\TicketPolicy;
 use App\Support\CurrentCompany;
 use App\Support\Modules;
@@ -46,6 +52,9 @@ class AuthServiceProvider extends ServiceProvider
         Form::class => FormPolicy::class,
         Event::class => EventPolicy::class,
         Ticket::class => TicketPolicy::class,
+        Farm::class => FarmPolicy::class,
+        Field::class => FieldPolicy::class,
+        Season::class => SeasonPolicy::class,
     ];
 
     public function boot(): void

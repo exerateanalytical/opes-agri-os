@@ -7,10 +7,13 @@ use App\Enums\DocumentType;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Document;
+use App\Models\Farm;
+use App\Models\Field;
 use App\Models\Item;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
 use App\Models\Role;
+use App\Models\Season;
 use App\Models\User;
 use App\Services\ApiTokenIssuer;
 use App\Support\CurrentCompany;
@@ -55,6 +58,12 @@ class AbilityEnforcementTest extends TestCase
     protected Document $issuedDocument;
 
     protected Payment $payment;
+
+    protected Farm $farm;
+
+    protected Field $field;
+
+    protected Season $season;
 
     protected function setUp(): void
     {
@@ -112,6 +121,10 @@ class AbilityEnforcementTest extends TestCase
             'document_id' => $this->issuedDocument->id,
             'amount' => 50,
         ]);
+
+        $this->farm = Farm::create(['name' => 'A Farm']);
+        $this->field = Field::create(['farm_id' => $this->farm->id, 'name' => 'A Field']);
+        $this->season = Season::create(['name' => 'A Season', 'starts_on' => now()->toDateString()]);
     }
 
     /** @return array<int, array{method: string, uri: string}> */
@@ -138,6 +151,21 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'POST', 'uri' => "/api/v1/documents/{$this->issuedDocument->id}/payments"],
             ['method' => 'GET', 'uri' => '/api/v1/payments'],
             ['method' => 'GET', 'uri' => "/api/v1/payments/{$this->payment->id}"],
+            ['method' => 'GET', 'uri' => '/api/v1/farms'],
+            ['method' => 'POST', 'uri' => '/api/v1/farms'],
+            ['method' => 'GET', 'uri' => "/api/v1/farms/{$this->farm->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/farms/{$this->farm->id}"],
+            ['method' => 'DELETE', 'uri' => "/api/v1/farms/{$this->farm->id}"],
+            ['method' => 'GET', 'uri' => '/api/v1/fields'],
+            ['method' => 'POST', 'uri' => '/api/v1/fields'],
+            ['method' => 'GET', 'uri' => "/api/v1/fields/{$this->field->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/fields/{$this->field->id}"],
+            ['method' => 'DELETE', 'uri' => "/api/v1/fields/{$this->field->id}"],
+            ['method' => 'GET', 'uri' => '/api/v1/seasons'],
+            ['method' => 'POST', 'uri' => '/api/v1/seasons'],
+            ['method' => 'GET', 'uri' => "/api/v1/seasons/{$this->season->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/seasons/{$this->season->id}"],
+            ['method' => 'DELETE', 'uri' => "/api/v1/seasons/{$this->season->id}"],
         ];
     }
 
