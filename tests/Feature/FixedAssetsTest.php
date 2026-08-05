@@ -447,4 +447,23 @@ class FixedAssetsTest extends TestCase
 
         $this->assertSame(1, $van->fresh()->maintenanceRecords()->count());
     }
+
+    public function test_it_logs_a_fleet_trip(): void
+    {
+        $van = $this->buyVan();
+
+        Livewire::actingAs($this->owner)
+            ->test(AssetsIndex::class)
+            ->call('openTrip', $van->id)
+            ->set('tripDriverName', 'Jean')
+            ->set('tripStartedOn', now()->toDateString())
+            ->set('tripStartOdometer', '10000')
+            ->set('tripEndOdometer', '10120')
+            ->call('saveTrip')
+            ->assertHasNoErrors();
+
+        $trip = $van->fresh()->fleetTrips()->sole();
+        $this->assertSame('Jean', $trip->driver_name);
+        $this->assertSame(120.0, $trip->distance());
+    }
 }

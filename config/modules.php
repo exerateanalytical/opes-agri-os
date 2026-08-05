@@ -17,6 +17,7 @@ use App\Models\Expense;
 use App\Models\Farm;
 use App\Models\Field;
 use App\Models\FixedAsset;
+use App\Models\FleetTrip;
 use App\Models\Form;
 use App\Models\IrrigationLog;
 use App\Models\Item;
@@ -146,7 +147,7 @@ return [
         'icon' => 'briefcase',
         'default' => true,
         'groups' => ['assets'],
-        'models' => [FixedAsset::class, AssetMaintenanceRecord::class],
+        'models' => [FixedAsset::class, AssetMaintenanceRecord::class, FleetTrip::class],
     ],
 
     'banking' => [

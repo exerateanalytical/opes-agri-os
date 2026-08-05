@@ -86,6 +86,23 @@ class Index extends Component
 
     public string $maintenanceNextDueOn = '';
 
+    // ── Fleet trip ──────────────────────────────────────────────────────
+    public ?string $loggingTripAssetId = null;
+
+    public string $tripDriverName = '';
+
+    public string $tripPurpose = '';
+
+    public string $tripStartedOn = '';
+
+    public string $tripEndedOn = '';
+
+    public string $tripStartOdometer = '';
+
+    public string $tripEndOdometer = '';
+
+    public string $tripFuelCost = '';
+
     public function mount(): void
     {
         Gate::authorize('assets.view');
@@ -286,6 +303,52 @@ class Index extends Component
 
         $this->maintainingAssetId = null;
         session()->flash('status', 'Maintenance recorded.');
+    }
+
+    public function openTrip(string $id): void
+    {
+        Gate::authorize('assets.record-trip');
+
+        $this->loggingTripAssetId = $id;
+        $this->reset(['tripDriverName', 'tripPurpose', 'tripEndedOn', 'tripStartOdometer', 'tripEndOdometer', 'tripFuelCost']);
+        $this->tripStartedOn = now()->toDateString();
+        $this->resetValidation();
+    }
+
+    public function closeTrip(): void
+    {
+        $this->loggingTripAssetId = null;
+    }
+
+    public function saveTrip(): void
+    {
+        Gate::authorize('assets.record-trip');
+
+        $data = $this->validate([
+            'tripDriverName' => ['nullable', 'string', 'max:255'],
+            'tripPurpose' => ['nullable', 'string', 'max:255'],
+            'tripStartedOn' => ['required', 'date'],
+            'tripEndedOn' => ['nullable', 'date', 'after_or_equal:tripStartedOn'],
+            'tripStartOdometer' => ['nullable', 'numeric', 'min:0'],
+            'tripEndOdometer' => ['nullable', 'numeric', 'min:0'],
+            'tripFuelCost' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $asset = FixedAsset::query()->findOrFail($this->loggingTripAssetId);
+
+        $asset->fleetTrips()->create([
+            'driver_name' => $data['tripDriverName'] ?: null,
+            'purpose' => $data['tripPurpose'] ?: null,
+            'started_on' => $data['tripStartedOn'],
+            'ended_on' => $data['tripEndedOn'] ?: null,
+            'start_odometer' => $data['tripStartOdometer'] !== '' ? $data['tripStartOdometer'] : null,
+            'end_odometer' => $data['tripEndOdometer'] !== '' ? $data['tripEndOdometer'] : null,
+            'fuel_cost' => $data['tripFuelCost'] !== '' ? $data['tripFuelCost'] : null,
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->loggingTripAssetId = null;
+        session()->flash('status', 'Trip logged.');
     }
 
     public function render(): View

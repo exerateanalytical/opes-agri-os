@@ -80,6 +80,11 @@ class FixedAsset extends Model
         return $this->hasMany(AssetMaintenanceRecord::class);
     }
 
+    public function fleetTrips(): HasMany
+    {
+        return $this->hasMany(FleetTrip::class);
+    }
+
     public function categoryLabel(): string
     {
         return ChartOfAccounts::ASSET_CATEGORIES[$this->category][5] ?? ucfirst((string) $this->category);

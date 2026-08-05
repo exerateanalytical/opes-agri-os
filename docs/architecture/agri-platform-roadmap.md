@@ -177,8 +177,13 @@ piece actually needs, not by the order §3 lists them in:
   Expenses screen already records what a utility bill cost, this module records what was actually used.
   Full API + Livewire UI shipped together this time (no repeat of Phase 2a's assets legacy-precedent
   situation, since `utilities` is new end to end).
-- **Phase 3: Fleet & Logistics, Supply Chain & Traceability.** New domain shape (route/trip tracking,
-  chain-of-custody) — its own design pass when it's next.
+- **Phase 3a shipped: Fleet & Logistics.** `FleetTrip` (driver, purpose, start/end dates, start/end
+  odometer, fuel cost) keyed to `FixedAsset`, the same shape as `AssetMaintenanceRecord` — a vehicle is a
+  fixed asset with a trip log, same reasoning that decided Phase 2a. Distance is computed from the two
+  odometer readings rather than stored, so it can never drift from what was actually entered. Reuses the
+  `assets` module and permission group (new `record-trip` action). Supply Chain & Traceability is Phase
+  3b, not yet built — genuinely different from a trip log (chain-of-custody across the whole harvest →
+  stock → sale path, not one asset's activity).
 - **Phase 4: Partner & NGO CRM, Project & Grant Management.** New domain shape (grant milestones,
   disbursement conditions) — closer to Cooperative's shape than to Sales', worth designing alongside
   whichever comes first.

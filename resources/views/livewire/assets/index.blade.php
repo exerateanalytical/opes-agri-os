@@ -259,6 +259,12 @@
                                 Record maintenance
                             </button>
                         @endcan
+                        @can('assets.record-trip')
+                            <button type="button" wire:click="openTrip('{{ $asset->id }}')"
+                                    class="focusable rounded-lg bg-surface-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-2 hover:bg-tint-blue hover:text-brand">
+                                Log trip
+                            </button>
+                        @endcan
                         @can('assets.dispose')
                             <button type="button" wire:click="startDisposing('{{ $asset->id }}')"
                                     class="focusable rounded-lg bg-surface-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-2 hover:bg-tint-blue hover:text-brand">
@@ -348,6 +354,56 @@
                                 Save
                             </button>
                             <button type="button" wire:click="closeMaintenance"
+                                    class="tap focusable flex h-11 items-center justify-center rounded-xl border border-border bg-surface px-5 text-[14.5px] font-semibold text-ink">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
+                @if ($loggingTripAssetId === $asset->id)
+                    <div class="mt-3 rounded-xl border border-border bg-surface-2/50 p-4">
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <label class="{{ $labelClass }}" for="t-driver-{{ $asset->id }}">Driver (optional)</label>
+                                <input id="t-driver-{{ $asset->id }}" type="text" wire:model="tripDriverName" class="{{ $inputClass }}">
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="t-purpose-{{ $asset->id }}">Purpose (optional)</label>
+                                <input id="t-purpose-{{ $asset->id }}" type="text" wire:model="tripPurpose" class="{{ $inputClass }}" placeholder="Livraison — centre-ville">
+                            </div>
+                        </div>
+                        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <label class="{{ $labelClass }}" for="t-start-{{ $asset->id }}">Started</label>
+                                <input id="t-start-{{ $asset->id }}" type="date" wire:model="tripStartedOn" class="{{ $inputClass }}">
+                                @error('tripStartedOn') <p class="mt-1.5 text-[13px] font-medium text-negative">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="t-end-{{ $asset->id }}">Ended (optional)</label>
+                                <input id="t-end-{{ $asset->id }}" type="date" wire:model="tripEndedOn" class="{{ $inputClass }}">
+                            </div>
+                        </div>
+                        <div class="mt-3 grid gap-3 sm:grid-cols-3">
+                            <div>
+                                <label class="{{ $labelClass }}" for="t-start-odo-{{ $asset->id }}">Start odometer</label>
+                                <input id="t-start-odo-{{ $asset->id }}" type="number" step="0.1" min="0" wire:model="tripStartOdometer" class="{{ $inputClass }} tnum">
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="t-end-odo-{{ $asset->id }}">End odometer</label>
+                                <input id="t-end-odo-{{ $asset->id }}" type="number" step="0.1" min="0" wire:model="tripEndOdometer" class="{{ $inputClass }} tnum">
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="t-fuel-{{ $asset->id }}">Fuel cost</label>
+                                <input id="t-fuel-{{ $asset->id }}" type="number" step="1" min="0" inputmode="numeric" wire:model="tripFuelCost" class="{{ $inputClass }} tnum">
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-col gap-3 sm:flex-row-reverse">
+                            <button type="button" wire:click="saveTrip"
+                                    class="tap focusable flex h-11 items-center justify-center rounded-xl bg-fill-brand px-5 text-[14.5px] font-semibold text-white hover:opacity-90">
+                                Save
+                            </button>
+                            <button type="button" wire:click="closeTrip"
                                     class="tap focusable flex h-11 items-center justify-center rounded-xl border border-border bg-surface px-5 text-[14.5px] font-semibold text-ink">
                                 Cancel
                             </button>

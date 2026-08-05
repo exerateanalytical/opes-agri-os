@@ -287,6 +287,8 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'POST', 'uri' => "/api/v1/cooperative-votes/{$this->cooperativeVote->id}/ballots"],
             ['method' => 'GET', 'uri' => "/api/v1/fixed-assets/{$this->fixedAsset->id}/maintenance-records"],
             ['method' => 'POST', 'uri' => "/api/v1/fixed-assets/{$this->fixedAsset->id}/maintenance-records"],
+            ['method' => 'GET', 'uri' => "/api/v1/fixed-assets/{$this->fixedAsset->id}/trips"],
+            ['method' => 'POST', 'uri' => "/api/v1/fixed-assets/{$this->fixedAsset->id}/trips"],
             ['method' => 'GET', 'uri' => '/api/v1/utility-accounts'],
             ['method' => 'POST', 'uri' => '/api/v1/utility-accounts'],
             ['method' => 'GET', 'uri' => "/api/v1/utility-accounts/{$this->utilityAccount->id}"],
