@@ -84,6 +84,14 @@ individual modules need them; not built ahead of demand.
 Sales, Payments, Accounting stay exactly as they are — a harvest becomes a document through the same
 `DocumentIssuer`/`PaymentRecorder` path an invoice does today, not a parallel one.
 
+**V1 shipped.** All five pieces landed as five independently-mergeable milestones in `App\Domain\Agri`:
+item/stock batch tracking (`batch_number`/`expires_on` on `stock_movements`), Farms + Fields + Seasons,
+Crop Management (`HarvestRecorder`/`CropCyclePlanner`), and Procurement (`PurchaseOrderIssuer`/
+`PurchaseOrderReceiver`, reusing `DeliveryReceiver` rather than a second path into the ledger). Each
+shipped with its own API surface, Livewire UI, module toggle, permission group and tests; the
+cross-cutting ability-enforcement sweep (`AbilityEnforcementTest`) covers all of it structurally and at
+runtime.
+
 **V2 — livestock.** Livestock + Poultry (animal registry, health/vaccination, breeding, production
 tracking). Separable from V1 — doesn't block or depend on the planting/harvest loop.
 
@@ -105,6 +113,15 @@ scope/roadmap decisions specific to the agri expansion.
 
 ## 6. Open questions
 
-None blocking V1 as scoped. Revisit before V2: how animal records interact with the existing Asset
-Management domain (an animal is not quite "stock" and not quite a "fixed asset" — needs its own model,
-flagged here so V2 doesn't retrofit it onto the wrong one).
+None blocked V1 as shipped. Two valuation questions carried into V3, decided together rather than
+separately since they're the same underlying question (how does something arrive on the books at zero
+cash cost):
+
+- How animal records interact with the existing Asset Management domain (an animal is not quite "stock"
+  and not quite a "fixed asset" — needs its own model, flagged here so V2 doesn't retrofit it onto the
+  wrong one).
+- Harvest value recognition: a `CropCycle` harvest and a received `PurchaseOrder` both write stock
+  movements today with no accounting posting — a harvest owes nothing to anyone, which the existing
+  `RecordsBusinessEvents`/Ledger pattern has no event for yet. Debiting stock at cost and crediting a
+  production account is deferred past V1 by design (see M3/M4 commit messages), to be decided alongside
+  the animal-as-asset question once V3's real payables/receivables ledger work is underway.
