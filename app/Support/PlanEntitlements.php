@@ -1,0 +1,110 @@
+<?php
+
+namespace App\Support;
+
+use App\Models\Company;
+
+/**
+ * Which modules a company's plan includes — the pricing page's comparison
+ * table, made authoritative instead of decorative. Only the four modules
+ * that page actually gates by tier are enforced here (Papers from Growth,
+ * Events and Loyalty from Business); everything else (Sales, Customers,
+ * Products, Payments, Reports) is Basic-included and never plan-checked.
+ *
+ * A demo or trial account is deliberately exempt: the whole point of a trial
+ * is to show what a higher tier includes, so gating it here would undercut
+ * the sales pitch it exists to make. Enforcement starts once an account is
+ * `active` on a specific plan.
+ */
+class PlanEntitlements
+{
+    public const PLANS = ['basic', 'growth', 'business'];
+
+    /**
+     * Monthly price in XAF (Central African CFA franc) — the currency the
+     * pricing page quotes and the one MTN/Orange Mobile Money settle in for
+     * a Cameroon-registered merchant account. Annual billing is ten months
+     * for the price of twelve, mirrored from the pricing page's discount.
+     */
+    public const MONTHLY_PRICE_XAF = [
+        'basic' => 3000,
+        'growth' => 9000,
+        'business' => 21000,
+    ];
+
+    /**
+     * Lower index = included from an earlier plan.
+     *
+     * Keyed by the permission group an ability starts with, not by the module
+     * key in config/modules.php — the two mostly coincide, and where they do
+     * not (stock locations live under `products`) the module follows whatever
+     * its group is gated at, which is the right answer: a business paying for
+     * products has paid for knowing where they are.
+     *
+     * Kept in step with the module table on the pricing page. That table is
+     * what a customer read before paying, so it is the specification and this
+     * is the enforcement — not the other way round.
+     */
+    protected const MODULE_MIN_PLAN = [
+        'papers' => 'growth',
+        'forms' => 'growth',
+        // What the business owns and what it banks with: the accountant's
+        // ground, and the point at which a business has outgrown one person.
+        'assets' => 'growth',
+        'banking' => 'growth',
+        'employees' => 'growth',
+        'leave' => 'growth',
+        'events' => 'business',
+        'loyalty' => 'business',
+        // Payroll is the single most valuable thing here — CNPS, IRPP and the
+        // centimes additionnels worked out monthly — and the one a business
+        // only needs once it has real staff.
+        'payroll' => 'business',
+    ];
+
+    /** The amount due in XAF for one plan billed on one cycle. */
+    public static function priceFor(string $plan, string $billingCycle = 'monthly'): int
+    {
+        $monthly = self::MONTHLY_PRICE_XAF[$plan] ?? 0;
+
+        return $billingCycle === 'annual' ? $monthly * 10 : $monthly;
+    }
+
+    public static function allows(Company $company, string $module): bool
+    {
+        if (! array_key_exists($module, self::MODULE_MIN_PLAN)) {
+            return true;
+        }
+
+        if ($company->account_type !== 'active') {
+            return true;
+        }
+
+        return self::rank($company->plan) >= self::rank(self::MODULE_MIN_PLAN[$module]);
+    }
+
+    /**
+     * Whether a permission ability (e.g. "forms.create") is allowed by the
+     * company's plan. Abilities outside the four gated groups are always
+     * allowed here — this only answers the plan question, never the role one.
+     */
+    public static function allowsAbility(Company $company, string $ability): bool
+    {
+        $module = explode('.', $ability, 2)[0] ?? '';
+
+        return self::allows($company, $module);
+    }
+
+    /** The lowest plan that includes a module, for an upgrade prompt. */
+    public static function minimumPlanFor(string $module): ?string
+    {
+        return self::MODULE_MIN_PLAN[$module] ?? null;
+    }
+
+    protected static function rank(string $plan): int
+    {
+        $index = array_search($plan, self::PLANS, true);
+
+        return $index === false ? 0 : $index;
+    }
+}

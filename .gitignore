@@ -1,0 +1,33 @@
+*.log
+.DS_Store
+/build
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+/Caddyfile
+/Caddyfile.lan
+
+# Agent worktrees and local Claude Code state — never project code.
+/.claude/
+
+# Output of scripts/audit/ui-audit.mjs
+/audit-report.json
