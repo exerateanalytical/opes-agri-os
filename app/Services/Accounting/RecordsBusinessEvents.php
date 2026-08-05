@@ -6,6 +6,8 @@ use App\Enums\PaymentMethod;
 use App\Models\Company;
 use App\Models\Document;
 use App\Models\JournalEntry;
+use App\Models\Loan;
+use App\Models\LoanRepayment;
 use App\Models\Payment;
 use App\Models\User;
 use App\Support\Accounting\ChartOfAccounts;
@@ -215,6 +217,89 @@ class RecordsBusinessEvents
             source: $payment,
             narration: 'Règlement '.($payment->reference ?? ''),
             reference: $payment->reference,
+            actor: $actor,
+        );
+    }
+
+    /**
+     * A loan going out. Unlike a harvest arriving or a member's own
+     * contribution, this is real cash the business does not get back
+     * automatically — it is owed, the same shape as a customer receivable —
+     * so it is posted from the moment it leaves, not deferred the way
+     * harvest and contribution value recognition currently are.
+     */
+    public function recordLoanDisbursement(Loan $loan, Company $company, string $destination, ?User $actor = null): ?JournalEntry
+    {
+        if (! $this->chartIsReady($company)) {
+            return null;
+        }
+
+        $principal = round((float) $loan->principal, 2);
+
+        if ($principal <= 0) {
+            return null;
+        }
+
+        $loan->loadMissing('member.contact');
+
+        return $this->ledger->post(
+            company: $company,
+            journal: $destination === 'cash' ? 'CA' : 'BQ',
+            entryDate: $loan->disbursed_on?->toDateString() ?? now()->toDateString(),
+            lines: [
+                ['account' => 'member_loans', 'debit' => $principal, 'narration' => $loan->member?->contact?->name],
+                ['account' => $destination, 'credit' => $principal],
+            ],
+            source: $loan,
+            narration: 'Prêt décaissé — '.($loan->member?->contact?->name ?? ''),
+            actor: $actor,
+        );
+    }
+
+    /**
+     * A repayment coming in: cash or bank rises by the full amount, the
+     * member's loan balance falls by the principal portion, and the
+     * interest portion is income earned — three legs from one payment,
+     * the same reasoning payroll's seven-account entry follows for the
+     * same underlying rule (post everything the event actually moved).
+     */
+    public function recordLoanRepayment(LoanRepayment $repayment, Company $company, string $destination, ?User $actor = null): ?JournalEntry
+    {
+        if (! $this->chartIsReady($company)) {
+            return null;
+        }
+
+        $amount = round((float) $repayment->amount, 2);
+
+        if ($amount <= 0) {
+            return null;
+        }
+
+        $repayment->loadMissing('loan.member.contact');
+
+        $principalPortion = round((float) $repayment->principal_portion, 2);
+        $interestPortion = round((float) $repayment->interest_portion, 2);
+
+        $lines = [
+            ['account' => $destination, 'debit' => $amount, 'narration' => $repayment->loan?->member?->contact?->name],
+        ];
+
+        if ($principalPortion > 0) {
+            $lines[] = ['account' => 'member_loans', 'credit' => $principalPortion];
+        }
+
+        if ($interestPortion > 0) {
+            $lines[] = ['account' => 'interest_income', 'credit' => $interestPortion];
+        }
+
+        return $this->ledger->post(
+            company: $company,
+            journal: $destination === 'cash' ? 'CA' : 'BQ',
+            entryDate: $repayment->paid_on?->toDateString() ?? now()->toDateString(),
+            lines: $lines,
+            source: $repayment,
+            narration: 'Remboursement de prêt — '.($repayment->loan?->member?->contact?->name ?? ''),
+            reference: $repayment->reference,
             actor: $actor,
         );
     }

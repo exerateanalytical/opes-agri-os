@@ -121,6 +121,20 @@ cooperative's contributions and any future loan disbursements are real cash move
 one may need resolving *before* V3's next milestone rather than deferred to V3 the way the harvest
 question was to V1.
 
+**V3 M2 shipped:** Microfinance & Credit — loans against a `CooperativeMember`, flat interest (principal
+× rate, applied once, no amortisation schedule), with `LoanDisburser` and `LoanRepaymentRecorder`
+posting to the accounting ledger from day one. This resolves the accounting-posting question flagged
+above the way that flag anticipated: unlike a harvest or a member's own contribution, a loan is real
+cash the business does not get back automatically, so `RecordsBusinessEvents::recordLoanDisbursement()`/
+`recordLoanRepayment()` debit/credit a new `member_loans` (274) role the moment cash actually moves — a
+disbursement debits 274 and credits cash/bank, and each repayment splits proportionally between 274
+(principal) and `interest_income` (771), capped at what the loan has left to recognise. Contributions
+and harvests remain deliberately unposted; loans are the one V1–V3 event that involves credit rather
+than the business's own inventory or a member's own money, which is the distinction that decided it.
+Voting/governance (quorum rules, AGM records) remains unbuilt, and is not implied by anything shipped
+here — it is a different domain shape again (membership rights, not cash), flagged for its own
+milestone whenever cooperative governance becomes the priority over credit.
+
 **Later, unscheduled:** Fisheries, Beekeeping, Forestry, Greenhouse, Nursery & Seed, Soil & Fertility,
 Irrigation, Machinery & Equipment, Utility Management, Fleet & Logistics, Supply Chain & Traceability,
 Partner & NGO CRM, Project & Grant Management, Analytics & BI beyond what Sales/Reports already provide.

@@ -68,7 +68,12 @@ class Permissions
         // group, since one role always administers all of it, same
         // reasoning as Farms covering farms/fields/seasons.
         'Livestock' => ['view', 'create', 'update', 'delete', 'record-health', 'record-production'],
-        'Cooperative' => ['view', 'create', 'update', 'delete', 'record-contribution'],
+        // Loans share the Cooperative group — a loan belongs to a member,
+        // the same reasoning that keeps Farms/Fields/Seasons together.
+        'Cooperative' => [
+            'view', 'create', 'update', 'delete', 'record-contribution',
+            'disburse-loan', 'record-repayment',
+        ],
     ];
 
     /**

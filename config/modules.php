@@ -16,6 +16,7 @@ use App\Models\Field;
 use App\Models\FixedAsset;
 use App\Models\Form;
 use App\Models\Item;
+use App\Models\Loan;
 use App\Models\PartnerClient;
 use App\Models\Payment;
 use App\Models\PayrollRun;
@@ -267,7 +268,7 @@ return [
         'icon' => 'users',
         'default' => true,
         'groups' => ['cooperative'],
-        'models' => [CooperativeMember::class],
+        'models' => [CooperativeMember::class, Loan::class],
     ],
 
     /*

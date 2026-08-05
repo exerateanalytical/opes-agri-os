@@ -6,6 +6,7 @@ use App\Domain\Agri\Http\Controllers\Api\V1\FieldController;
 use App\Domain\Agri\Http\Controllers\Api\V1\PurchaseOrderController;
 use App\Domain\Agri\Http\Controllers\Api\V1\SeasonController;
 use App\Domain\Cooperative\Http\Controllers\Api\V1\CooperativeMemberController;
+use App\Domain\Cooperative\Http\Controllers\Api\V1\LoanController;
 use App\Domain\Livestock\Http\Controllers\Api\V1\AnimalBatchController;
 use App\Domain\Livestock\Http\Controllers\Api\V1\AnimalController;
 use App\Domain\Sales\Http\Controllers\Api\V1\ContactController;
@@ -171,4 +172,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:cooperative.delete')->name('api.v1.cooperative-members.destroy');
     Route::post('/cooperative-members/{cooperativeMember}/contributions', [CooperativeMemberController::class, 'recordContribution'])
         ->middleware('abilities:cooperative.record-contribution')->name('api.v1.cooperative-members.contributions.store');
+
+    Route::middleware('abilities:cooperative.view')->group(function () {
+        Route::get('/loans', [LoanController::class, 'index'])->name('api.v1.loans.index');
+        Route::get('/loans/{loan}', [LoanController::class, 'show'])->name('api.v1.loans.show');
+    });
+    Route::post('/loans', [LoanController::class, 'store'])
+        ->middleware('abilities:cooperative.create')->name('api.v1.loans.store');
+    Route::post('/loans/{loan}/disburse', [LoanController::class, 'disburse'])
+        ->middleware('abilities:cooperative.disburse-loan')->name('api.v1.loans.disburse');
+    Route::post('/loans/{loan}/repayments', [LoanController::class, 'recordRepayment'])
+        ->middleware('abilities:cooperative.record-repayment')->name('api.v1.loans.repayments.store');
 });

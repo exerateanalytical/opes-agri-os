@@ -14,6 +14,7 @@ use App\Models\Document;
 use App\Models\Farm;
 use App\Models\Field;
 use App\Models\Item;
+use App\Models\Loan;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
 use App\Models\PurchaseOrder;
@@ -79,6 +80,8 @@ class AbilityEnforcementTest extends TestCase
     protected AnimalBatch $animalBatch;
 
     protected CooperativeMember $cooperativeMember;
+
+    protected Loan $loan;
 
     protected function setUp(): void
     {
@@ -154,6 +157,11 @@ class AbilityEnforcementTest extends TestCase
         ]);
 
         $this->cooperativeMember = CooperativeMember::create(['contact_id' => $this->contact->id, 'status' => 'active']);
+
+        $this->loan = Loan::create([
+            'cooperative_member_id' => $this->cooperativeMember->id, 'principal' => 10000, 'interest_rate' => 0.1,
+            'status' => 'pending',
+        ]);
     }
 
     /** @return array<int, array{method: string, uri: string}> */
@@ -225,6 +233,11 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'PATCH', 'uri' => "/api/v1/cooperative-members/{$this->cooperativeMember->id}"],
             ['method' => 'DELETE', 'uri' => "/api/v1/cooperative-members/{$this->cooperativeMember->id}"],
             ['method' => 'POST', 'uri' => "/api/v1/cooperative-members/{$this->cooperativeMember->id}/contributions"],
+            ['method' => 'GET', 'uri' => '/api/v1/loans'],
+            ['method' => 'POST', 'uri' => '/api/v1/loans'],
+            ['method' => 'GET', 'uri' => "/api/v1/loans/{$this->loan->id}"],
+            ['method' => 'POST', 'uri' => "/api/v1/loans/{$this->loan->id}/disburse"],
+            ['method' => 'POST', 'uri' => "/api/v1/loans/{$this->loan->id}/repayments"],
         ];
     }
 

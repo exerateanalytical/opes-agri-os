@@ -15,6 +15,7 @@ use App\Models\Farm;
 use App\Models\Field;
 use App\Models\Form;
 use App\Models\Item;
+use App\Models\Loan;
 use App\Models\Payment;
 use App\Models\PurchaseOrder;
 use App\Models\Receipt;
@@ -34,6 +35,7 @@ use App\Policies\FarmPolicy;
 use App\Policies\FieldPolicy;
 use App\Policies\FormPolicy;
 use App\Policies\ItemPolicy;
+use App\Policies\LoanPolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\PurchaseOrderPolicy;
 use App\Policies\ReceiptPolicy;
@@ -70,6 +72,7 @@ class AuthServiceProvider extends ServiceProvider
         Animal::class => AnimalPolicy::class,
         AnimalBatch::class => AnimalBatchPolicy::class,
         CooperativeMember::class => CooperativeMemberPolicy::class,
+        Loan::class => LoanPolicy::class,
     ];
 
     public function boot(): void

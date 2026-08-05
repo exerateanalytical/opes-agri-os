@@ -53,6 +53,8 @@ class RolePermissionSeeder extends Seeder
             'Crops' => ['view', 'create', 'update', 'record-harvest'],
             'Procurement' => ['view', 'create', 'update', 'issue'],
             'Livestock' => ['view', 'create', 'update', 'record-health', 'record-production'],
+            // Loan cash movements stay with the accountant, below — the same
+            // split Procurement draws between issuing a PO and receiving it.
             'Cooperative' => ['view', 'create', 'update', 'record-contribution'],
         ]],
         'accountant' => ['name' => 'Accountant', 'level' => 4, 'grants' => [
@@ -88,7 +90,10 @@ class RolePermissionSeeder extends Seeder
             // recording and issuing stays with whoever runs the farm.
             'Procurement' => ['view'],
             'Livestock' => ['view'],
-            'Cooperative' => ['view'],
+            // Disbursing and collecting on a loan is real cash leaving and
+            // entering the till or the bank — the accountant's ground before
+            // anyone else's, same reasoning as Payments and Expenses above.
+            'Cooperative' => ['view', 'disburse-loan', 'record-repayment'],
         ]],
         'sales-officer' => ['name' => 'Sales Officer', 'level' => 5, 'grants' => [
             'Business' => ['view'],

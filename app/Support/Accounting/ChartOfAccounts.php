@@ -96,6 +96,10 @@ class ChartOfAccounts
          * the moment somebody needs it.
          */
         'interest_income' => ['771', 'Intérêts de prêts et créances diverses'],
+        // What a cooperative has advanced to its members and not yet
+        // recovered — the mirror of interest_income above, which is why the
+        // two accounts share a name in the plan.
+        'member_loans' => ['274', 'Prêts et créances diverses'],
         'social_payable' => ['431', 'Sécurité sociale'],
         'tax_withheld' => ['447', 'État, impôts retenus à la source'],
 
