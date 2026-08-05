@@ -4,6 +4,7 @@ use App\Domain\Sales\Http\Controllers\Api\V1\ContactController;
 use App\Domain\Sales\Http\Controllers\Api\V1\DocumentController;
 use App\Domain\Sales\Http\Controllers\Api\V1\DocumentLifecycleController;
 use App\Domain\Sales\Http\Controllers\Api\V1\ItemController;
+use App\Domain\Sales\Http\Controllers\Api\V1\PaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -66,4 +67,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:sales.void')->name('api.v1.documents.void');
     Route::post('/documents/{document}/convert', [DocumentLifecycleController::class, 'convert'])
         ->middleware('abilities:sales.create')->name('api.v1.documents.convert');
+    Route::post('/documents/{document}/payments', [PaymentController::class, 'store'])
+        ->middleware('abilities:payments.record')->name('api.v1.documents.payments.store');
+
+    Route::middleware('abilities:payments.view')->group(function () {
+        Route::get('/payments', [PaymentController::class, 'index'])->name('api.v1.payments.index');
+        Route::get('/payments/{payment}', [PaymentController::class, 'show'])->name('api.v1.payments.show');
+    });
 });
