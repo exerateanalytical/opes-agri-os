@@ -72,7 +72,7 @@ class Permissions
         // the same reasoning that keeps Farms/Fields/Seasons together.
         'Cooperative' => [
             'view', 'create', 'update', 'delete', 'record-contribution',
-            'disburse-loan', 'record-repayment',
+            'disburse-loan', 'record-repayment', 'record-attendance', 'cast-vote',
         ],
     ];
 

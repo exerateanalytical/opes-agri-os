@@ -7,7 +7,9 @@ use App\Models\AnimalBatch;
 use App\Models\Artisan;
 use App\Models\BusinessDocument;
 use App\Models\Contact;
+use App\Models\CooperativeMeeting;
 use App\Models\CooperativeMember;
+use App\Models\CooperativeVote;
 use App\Models\CropCycle;
 use App\Models\Document;
 use App\Models\Event;
@@ -27,7 +29,9 @@ use App\Policies\AnimalPolicy;
 use App\Policies\ArtisanPolicy;
 use App\Policies\BusinessDocumentPolicy;
 use App\Policies\ContactPolicy;
+use App\Policies\CooperativeMeetingPolicy;
 use App\Policies\CooperativeMemberPolicy;
+use App\Policies\CooperativeVotePolicy;
 use App\Policies\CropCyclePolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\EventPolicy;
@@ -73,6 +77,8 @@ class AuthServiceProvider extends ServiceProvider
         AnimalBatch::class => AnimalBatchPolicy::class,
         CooperativeMember::class => CooperativeMemberPolicy::class,
         Loan::class => LoanPolicy::class,
+        CooperativeMeeting::class => CooperativeMeetingPolicy::class,
+        CooperativeVote::class => CooperativeVotePolicy::class,
     ];
 
     public function boot(): void

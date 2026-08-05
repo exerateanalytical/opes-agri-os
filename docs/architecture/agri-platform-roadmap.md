@@ -135,6 +135,20 @@ Voting/governance (quorum rules, AGM records) remains unbuilt, and is not implie
 here — it is a different domain shape again (membership rights, not cash), flagged for its own
 milestone whenever cooperative governance becomes the priority over credit.
 
+**V3 M3 shipped:** governance — `CooperativeMeeting` (scheduled date, a `quorum_required` count, status)
+with `MeetingAttendance` per member and `CooperativeMeeting::quorumMet()` reading straight off the
+attendance count, and `CooperativeVote` (optionally tied to a meeting, or raised on its own) with
+`VoteBallot` — one ballot per member per vote, enforced by a database unique constraint rather than
+application code alone, and `CooperativeVote::tally()` grouping by choice. Nothing here touches the
+accounting ledger: membership rights are not cash, unlike loans (V3 M2), so there was no posting
+question to resolve this time. Deliberately out of this milestone: weighted voting (one member, one
+vote here — share-weighted or patronage-weighted voting is a different rule a cooperative's bylaws would
+have to specify), and quorum enforcement blocking a vote from opening (a vote can currently open and
+close regardless of whether its associated meeting hit quorum — the flag is informational, not a gate,
+until a real workflow asks for one). This milestone shipped API-first only, without a Livewire screen —
+consistent with the "provisioned for mobile" discipline (§2), but a gap worth closing before this module
+is offered to a business through the web app, not just through the API.
+
 **Later, unscheduled:** Fisheries, Beekeeping, Forestry, Greenhouse, Nursery & Seed, Soil & Fertility,
 Irrigation, Machinery & Equipment, Utility Management, Fleet & Logistics, Supply Chain & Traceability,
 Partner & NGO CRM, Project & Grant Management, Analytics & BI beyond what Sales/Reports already provide.

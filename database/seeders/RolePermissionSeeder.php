@@ -55,7 +55,13 @@ class RolePermissionSeeder extends Seeder
             'Livestock' => ['view', 'create', 'update', 'record-health', 'record-production'],
             // Loan cash movements stay with the accountant, below — the same
             // split Procurement draws between issuing a PO and receiving it.
-            'Cooperative' => ['view', 'create', 'update', 'record-contribution'],
+            // Meetings, attendance and votes are membership administration,
+            // not money, so they stay here with everything else the manager
+            // runs day to day.
+            'Cooperative' => [
+                'view', 'create', 'update', 'record-contribution',
+                'record-attendance', 'cast-vote',
+            ],
         ]],
         'accountant' => ['name' => 'Accountant', 'level' => 4, 'grants' => [
             'Business' => ['view'],

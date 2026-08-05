@@ -8,7 +8,9 @@ use App\Models\Animal;
 use App\Models\AnimalBatch;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\CooperativeMeeting;
 use App\Models\CooperativeMember;
+use App\Models\CooperativeVote;
 use App\Models\CropCycle;
 use App\Models\Document;
 use App\Models\Farm;
@@ -82,6 +84,10 @@ class AbilityEnforcementTest extends TestCase
     protected CooperativeMember $cooperativeMember;
 
     protected Loan $loan;
+
+    protected CooperativeMeeting $cooperativeMeeting;
+
+    protected CooperativeVote $cooperativeVote;
 
     protected function setUp(): void
     {
@@ -162,6 +168,14 @@ class AbilityEnforcementTest extends TestCase
             'cooperative_member_id' => $this->cooperativeMember->id, 'principal' => 10000, 'interest_rate' => 0.1,
             'status' => 'pending',
         ]);
+
+        $this->cooperativeMeeting = CooperativeMeeting::create([
+            'title' => 'AGM', 'scheduled_on' => now()->toDateString(), 'status' => 'scheduled',
+        ]);
+
+        $this->cooperativeVote = CooperativeVote::create([
+            'title' => 'Motion', 'status' => 'open', 'opened_on' => now()->toDateString(),
+        ]);
     }
 
     /** @return array<int, array{method: string, uri: string}> */
@@ -238,6 +252,16 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'GET', 'uri' => "/api/v1/loans/{$this->loan->id}"],
             ['method' => 'POST', 'uri' => "/api/v1/loans/{$this->loan->id}/disburse"],
             ['method' => 'POST', 'uri' => "/api/v1/loans/{$this->loan->id}/repayments"],
+            ['method' => 'GET', 'uri' => '/api/v1/cooperative-meetings'],
+            ['method' => 'POST', 'uri' => '/api/v1/cooperative-meetings'],
+            ['method' => 'GET', 'uri' => "/api/v1/cooperative-meetings/{$this->cooperativeMeeting->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/cooperative-meetings/{$this->cooperativeMeeting->id}"],
+            ['method' => 'POST', 'uri' => "/api/v1/cooperative-meetings/{$this->cooperativeMeeting->id}/attendance"],
+            ['method' => 'GET', 'uri' => '/api/v1/cooperative-votes'],
+            ['method' => 'POST', 'uri' => '/api/v1/cooperative-votes'],
+            ['method' => 'GET', 'uri' => "/api/v1/cooperative-votes/{$this->cooperativeVote->id}"],
+            ['method' => 'POST', 'uri' => "/api/v1/cooperative-votes/{$this->cooperativeVote->id}/close"],
+            ['method' => 'POST', 'uri' => "/api/v1/cooperative-votes/{$this->cooperativeVote->id}/ballots"],
         ];
     }
 

@@ -5,7 +5,9 @@ use App\Domain\Agri\Http\Controllers\Api\V1\FarmController;
 use App\Domain\Agri\Http\Controllers\Api\V1\FieldController;
 use App\Domain\Agri\Http\Controllers\Api\V1\PurchaseOrderController;
 use App\Domain\Agri\Http\Controllers\Api\V1\SeasonController;
+use App\Domain\Cooperative\Http\Controllers\Api\V1\CooperativeMeetingController;
 use App\Domain\Cooperative\Http\Controllers\Api\V1\CooperativeMemberController;
+use App\Domain\Cooperative\Http\Controllers\Api\V1\CooperativeVoteController;
 use App\Domain\Cooperative\Http\Controllers\Api\V1\LoanController;
 use App\Domain\Livestock\Http\Controllers\Api\V1\AnimalBatchController;
 use App\Domain\Livestock\Http\Controllers\Api\V1\AnimalController;
@@ -183,4 +185,24 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:cooperative.disburse-loan')->name('api.v1.loans.disburse');
     Route::post('/loans/{loan}/repayments', [LoanController::class, 'recordRepayment'])
         ->middleware('abilities:cooperative.record-repayment')->name('api.v1.loans.repayments.store');
+
+    Route::middleware('abilities:cooperative.view')->group(function () {
+        Route::get('/cooperative-meetings', [CooperativeMeetingController::class, 'index'])->name('api.v1.cooperative-meetings.index');
+        Route::get('/cooperative-meetings/{cooperativeMeeting}', [CooperativeMeetingController::class, 'show'])->name('api.v1.cooperative-meetings.show');
+        Route::get('/cooperative-votes', [CooperativeVoteController::class, 'index'])->name('api.v1.cooperative-votes.index');
+        Route::get('/cooperative-votes/{cooperativeVote}', [CooperativeVoteController::class, 'show'])->name('api.v1.cooperative-votes.show');
+    });
+    Route::post('/cooperative-meetings', [CooperativeMeetingController::class, 'store'])
+        ->middleware('abilities:cooperative.create')->name('api.v1.cooperative-meetings.store');
+    Route::patch('/cooperative-meetings/{cooperativeMeeting}', [CooperativeMeetingController::class, 'update'])
+        ->middleware('abilities:cooperative.update')->name('api.v1.cooperative-meetings.update');
+    Route::post('/cooperative-meetings/{cooperativeMeeting}/attendance', [CooperativeMeetingController::class, 'recordAttendance'])
+        ->middleware('abilities:cooperative.record-attendance')->name('api.v1.cooperative-meetings.attendance.store');
+
+    Route::post('/cooperative-votes', [CooperativeVoteController::class, 'store'])
+        ->middleware('abilities:cooperative.create')->name('api.v1.cooperative-votes.store');
+    Route::post('/cooperative-votes/{cooperativeVote}/close', [CooperativeVoteController::class, 'close'])
+        ->middleware('abilities:cooperative.update')->name('api.v1.cooperative-votes.close');
+    Route::post('/cooperative-votes/{cooperativeVote}/ballots', [CooperativeVoteController::class, 'castVote'])
+        ->middleware('abilities:cooperative.cast-vote')->name('api.v1.cooperative-votes.ballots.store');
 });

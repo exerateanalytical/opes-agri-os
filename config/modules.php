@@ -5,7 +5,9 @@ use App\Models\AnimalBatch;
 use App\Models\BankAccount;
 use App\Models\BusinessDocument;
 use App\Models\Contact;
+use App\Models\CooperativeMeeting;
 use App\Models\CooperativeMember;
+use App\Models\CooperativeVote;
 use App\Models\CropCycle;
 use App\Models\Document;
 use App\Models\Employee;
@@ -268,7 +270,7 @@ return [
         'icon' => 'users',
         'default' => true,
         'groups' => ['cooperative'],
-        'models' => [CooperativeMember::class, Loan::class],
+        'models' => [CooperativeMember::class, Loan::class, CooperativeMeeting::class, CooperativeVote::class],
     ],
 
     /*
