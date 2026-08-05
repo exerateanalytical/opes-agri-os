@@ -192,6 +192,34 @@ piece actually needs, not by the order §3 lists them in:
 - **Phase 4: Partner & NGO CRM, Project & Grant Management.** New domain shape (grant milestones,
   disbursement conditions) — closer to Cooperative's shape than to Sales', worth designing alongside
   whichever comes first.
+
+  **Phase 4 shipped.** `Partner` — an NGO, donor, government or cooperative partner — is a dedicated
+  model, deliberately not a `Contact`: a partner funds or co-runs work, which is a different relationship
+  than a customer or a supplier, the same reasoning that kept `Animal` off `FixedAsset` in V2 M1.
+  `PartnerInteraction` is the dated-record pattern again (a contact log, no lifecycle of its own,
+  cascade-deleted with its partner). `GrantProject` is the funded work itself, with an optional
+  `partner_id` — a business can track a self-funded project without ever switching Partner CRM on, the
+  same reasoning `Animal.farm_id` is optional. `GrantTransaction` covers both directions of real grant
+  cash: a `receipt` (the partner's money arriving) and an `expenditure` (the project spending it) — both
+  post to the accounting ledger the moment they're recorded, resolved the same way loans were in V3 M2:
+  a grant is real cash the business did not earn from a sale, so it is not deferred the way harvest and
+  contribution value recognition are. `RecordsBusinessEvents::recordGrantReceipt()` debits cash/bank and
+  credits a new `grant_income` role (SYSCOHADA 741, *Subventions d'exploitation* — the plan's own account
+  for an operating subsidy or grant received, a closer fit than folding it into ordinary sales income);
+  `recordGrantExpenditure()` is the mirror, debiting a new `project_expenses` role (658, *Charges
+  diverses* — the plan's catch-all for an operating cost with no better-fitting class-6 account, which a
+  grant-funded project's spend is). `GrantProject` caches `received_amount`/`spent_amount` running totals
+  the same way `Loan` caches `balance`, and `GrantTransactionRecorder` refuses an expenditure larger than
+  what the grant has left, the same guard `LoanRepaymentRecorder` applies to an overpayment.
+
+  Permission groups are `Partner Crm` (slug `partner-crm`) and `Grants` — not `Partners`, which already
+  names the unrelated secretariat client-book programme; a donor/NGO/government partner here is never
+  that meaning of the word. Both new modules (`partner_crm`, `grants`) default on, ungated by plan, same
+  as every V4 module so far. Deliberately not built this milestone: grant milestones/disbursement
+  conditions (a funder's tranche schedule tied to deliverables) and budget lines within a project (right
+  now a `GrantProject` tracks one total against one running spend, not a per-category budget) — both are
+  real shape a heavier grants-management tool would need, but nothing shipped so far asked for them, and
+  speculative schema is exactly what this roadmap avoids building ahead of demand.
 - **Phase 5: Analytics & Business Intelligence** beyond what Sales/Reports already provide — dashboards
   and cross-module reporting once there's enough shipped data across modules to make it worth building.
 

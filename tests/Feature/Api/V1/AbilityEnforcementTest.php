@@ -16,8 +16,10 @@ use App\Models\Document;
 use App\Models\Farm;
 use App\Models\Field;
 use App\Models\FixedAsset;
+use App\Models\GrantProject;
 use App\Models\Item;
 use App\Models\Loan;
+use App\Models\Partner;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
 use App\Models\PurchaseOrder;
@@ -94,6 +96,10 @@ class AbilityEnforcementTest extends TestCase
     protected FixedAsset $fixedAsset;
 
     protected UtilityAccount $utilityAccount;
+
+    protected Partner $partner;
+
+    protected GrantProject $grantProject;
 
     protected function setUp(): void
     {
@@ -195,6 +201,12 @@ class AbilityEnforcementTest extends TestCase
         ]);
 
         $this->utilityAccount = UtilityAccount::create(['utility_type' => 'electricity', 'status' => 'active']);
+
+        $this->partner = Partner::create(['name' => 'Green Future NGO', 'type' => 'ngo', 'status' => 'active']);
+
+        $this->grantProject = GrantProject::create([
+            'name' => 'Water Access Project', 'total_amount' => 50000, 'currency' => 'USD', 'status' => 'active',
+        ]);
     }
 
     /** @return array<int, array{method: string, uri: string}> */
@@ -297,6 +309,20 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'DELETE', 'uri' => "/api/v1/utility-accounts/{$this->utilityAccount->id}"],
             ['method' => 'GET', 'uri' => "/api/v1/utility-accounts/{$this->utilityAccount->id}/readings"],
             ['method' => 'POST', 'uri' => "/api/v1/utility-accounts/{$this->utilityAccount->id}/readings"],
+            ['method' => 'GET', 'uri' => '/api/v1/partners'],
+            ['method' => 'POST', 'uri' => '/api/v1/partners'],
+            ['method' => 'GET', 'uri' => "/api/v1/partners/{$this->partner->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/partners/{$this->partner->id}"],
+            ['method' => 'DELETE', 'uri' => "/api/v1/partners/{$this->partner->id}"],
+            ['method' => 'GET', 'uri' => "/api/v1/partners/{$this->partner->id}/interactions"],
+            ['method' => 'POST', 'uri' => "/api/v1/partners/{$this->partner->id}/interactions"],
+            ['method' => 'GET', 'uri' => '/api/v1/grant-projects'],
+            ['method' => 'POST', 'uri' => '/api/v1/grant-projects'],
+            ['method' => 'GET', 'uri' => "/api/v1/grant-projects/{$this->grantProject->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/grant-projects/{$this->grantProject->id}"],
+            ['method' => 'DELETE', 'uri' => "/api/v1/grant-projects/{$this->grantProject->id}"],
+            ['method' => 'GET', 'uri' => "/api/v1/grant-projects/{$this->grantProject->id}/transactions"],
+            ['method' => 'POST', 'uri' => "/api/v1/grant-projects/{$this->grantProject->id}/transactions"],
         ];
     }
 

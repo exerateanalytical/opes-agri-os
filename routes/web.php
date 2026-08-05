@@ -41,6 +41,7 @@ use App\Livewire\Farms\Index as FarmsIndex;
 use App\Livewire\Forms\Builder as FormsBuilder;
 use App\Livewire\Forms\Index as FormsIndex;
 use App\Livewire\Forms\Responses as FormsResponses;
+use App\Livewire\Grants\Index as GrantsIndex;
 use App\Livewire\Invitations\Accept as InvitationAccept;
 use App\Livewire\Livestock\Index as LivestockIndex;
 use App\Livewire\Onboarding\Register;
@@ -50,6 +51,7 @@ use App\Livewire\Papers\Show as PapersShow;
 use App\Livewire\Partners\Clients as PartnerClients;
 use App\Livewire\Partners\ClientShow as PartnerClientShow;
 use App\Livewire\Partners\Earnings as PartnerEarnings;
+use App\Livewire\Partners\Index as PartnersIndex;
 use App\Livewire\Payments\Index as PaymentsIndex;
 use App\Livewire\Payroll\Index as PayrollIndex;
 use App\Livewire\Payroll\Show as PayrollShow;
@@ -248,6 +250,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/livestock', LivestockIndex::class)->middleware('can:livestock.view')->name('livestock');
     Route::get('/cooperative', CooperativeIndex::class)->middleware('can:cooperative.view')->name('cooperative');
     Route::get('/utilities', UtilitiesIndex::class)->middleware('can:utilities.view')->name('utilities');
+    Route::get('/partner-crm', PartnersIndex::class)->middleware('can:partner-crm.view')->name('partner-crm');
+    Route::get('/grants', GrantsIndex::class)->middleware('can:grants.view')->name('grants');
     Route::get('/banking', BankingIndex::class)->middleware('can:banking.view')->name('banking');
 
     /*

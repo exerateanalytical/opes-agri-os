@@ -63,6 +63,11 @@ class RolePermissionSeeder extends Seeder
                 'record-attendance', 'cast-vote',
             ],
             'Utilities' => ['view', 'create', 'update', 'record-reading'],
+            // Runs the partner relationship day to day — logging visits and
+            // calls is not a money job. Recording grant cash movement stays
+            // with the accountant, below, same split as loans.
+            'Partner Crm' => ['view', 'create', 'update', 'record-interaction'],
+            'Grants' => ['view', 'create', 'update'],
         ]],
         'accountant' => ['name' => 'Accountant', 'level' => 4, 'grants' => [
             'Business' => ['view'],
@@ -104,6 +109,11 @@ class RolePermissionSeeder extends Seeder
             // Utility bills feed the books the same way procurement does —
             // visibility, not the reading itself.
             'Utilities' => ['view'],
+            // Grant cash — receipts and expenditure — is real money moving,
+            // the accountant's ground before anyone else's, same reasoning
+            // as loan disbursement/repayment above.
+            'Partner Crm' => ['view'],
+            'Grants' => ['view', 'record-transaction'],
         ]],
         'sales-officer' => ['name' => 'Sales Officer', 'level' => 5, 'grants' => [
             'Business' => ['view'],
@@ -159,6 +169,8 @@ class RolePermissionSeeder extends Seeder
             'Livestock' => ['view'],
             'Cooperative' => ['view'],
             'Utilities' => ['view'],
+            'Partner Crm' => ['view'],
+            'Grants' => ['view'],
         ]],
     ];
 

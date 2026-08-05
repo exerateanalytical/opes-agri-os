@@ -16,8 +16,10 @@ use App\Models\Event;
 use App\Models\Farm;
 use App\Models\Field;
 use App\Models\Form;
+use App\Models\GrantProject;
 use App\Models\Item;
 use App\Models\Loan;
+use App\Models\Partner;
 use App\Models\Payment;
 use App\Models\PurchaseOrder;
 use App\Models\Receipt;
@@ -39,8 +41,10 @@ use App\Policies\EventPolicy;
 use App\Policies\FarmPolicy;
 use App\Policies\FieldPolicy;
 use App\Policies\FormPolicy;
+use App\Policies\GrantProjectPolicy;
 use App\Policies\ItemPolicy;
 use App\Policies\LoanPolicy;
+use App\Policies\PartnerPolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\PurchaseOrderPolicy;
 use App\Policies\ReceiptPolicy;
@@ -82,6 +86,8 @@ class AuthServiceProvider extends ServiceProvider
         UtilityAccount::class => UtilityAccountPolicy::class,
         CooperativeMeeting::class => CooperativeMeetingPolicy::class,
         CooperativeVote::class => CooperativeVotePolicy::class,
+        Partner::class => PartnerPolicy::class,
+        GrantProject::class => GrantProjectPolicy::class,
     ];
 
     public function boot(): void

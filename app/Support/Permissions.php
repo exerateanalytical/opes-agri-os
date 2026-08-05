@@ -75,6 +75,15 @@ class Permissions
             'disburse-loan', 'record-repayment', 'record-attendance', 'cast-vote',
         ],
         'Utilities' => ['view', 'create', 'update', 'delete', 'record-reading'],
+        // Named "Partner Crm" rather than "Partners" — that group already
+        // exists for the secretariat client-book programme, an unrelated
+        // meaning of "partner". A donor/NGO/government partner here is
+        // never that.
+        'Partner Crm' => ['view', 'create', 'update', 'delete', 'record-interaction'],
+        // Grant money movement is real cash, the same reasoning that has
+        // Cooperative keep loan actions in its own group rather than
+        // folding them into Accounting.
+        'Grants' => ['view', 'create', 'update', 'delete', 'record-transaction'],
     ];
 
     /**

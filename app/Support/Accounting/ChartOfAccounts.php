@@ -124,6 +124,22 @@ class ChartOfAccounts
          */
         'stock' => ['31', 'Marchandises'],
         'stock_variation' => ['6031', 'Variation des stocks de marchandises'],
+
+        /*
+         * Grant money. Unlike a harvest or a member's own contribution, a
+         * grant receipt and a project's spend against it are both real cash
+         * the business did not have before and does not keep at will — so,
+         * same reasoning as a loan (V3 M2), both post from the moment they
+         * move rather than being deferred. 74 is the plan's own account for
+         * operating subsidies/grants received — a closer fit than folding it
+         * into ordinary sales income (701/706), which it is not. 658 covers
+         * the spend: "diverse charges" is the plan's catch-all for an
+         * operating cost with no better-fitting class-6 account, which a
+         * grant-funded project's costs are — they are not goods bought for
+         * resale (601) or a named overhead category (622, 628, …).
+         */
+        'grant_income' => ['741', 'Subventions d\'exploitation'],
+        'project_expenses' => ['658', 'Charges diverses'],
     ];
 
     /**

@@ -13,6 +13,8 @@ use App\Domain\Cooperative\Http\Controllers\Api\V1\CooperativeVoteController;
 use App\Domain\Cooperative\Http\Controllers\Api\V1\LoanController;
 use App\Domain\Livestock\Http\Controllers\Api\V1\AnimalBatchController;
 use App\Domain\Livestock\Http\Controllers\Api\V1\AnimalController;
+use App\Domain\Partners\Http\Controllers\Api\V1\GrantProjectController;
+use App\Domain\Partners\Http\Controllers\Api\V1\PartnerController;
 use App\Domain\Sales\Http\Controllers\Api\V1\ContactController;
 use App\Domain\Sales\Http\Controllers\Api\V1\DocumentController;
 use App\Domain\Sales\Http\Controllers\Api\V1\DocumentLifecycleController;
@@ -238,4 +240,32 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:utilities.delete')->name('api.v1.utility-accounts.destroy');
     Route::post('/utility-accounts/{utilityAccount}/readings', [UtilityAccountController::class, 'recordReading'])
         ->middleware('abilities:utilities.record-reading')->name('api.v1.utility-accounts.readings.store');
+
+    Route::middleware('abilities:partner-crm.view')->group(function () {
+        Route::get('/partners', [PartnerController::class, 'index'])->name('api.v1.partners.index');
+        Route::get('/partners/{partner}', [PartnerController::class, 'show'])->name('api.v1.partners.show');
+        Route::get('/partners/{partner}/interactions', [PartnerController::class, 'interactions'])->name('api.v1.partners.interactions.index');
+    });
+    Route::post('/partners', [PartnerController::class, 'store'])
+        ->middleware('abilities:partner-crm.create')->name('api.v1.partners.store');
+    Route::patch('/partners/{partner}', [PartnerController::class, 'update'])
+        ->middleware('abilities:partner-crm.update')->name('api.v1.partners.update');
+    Route::delete('/partners/{partner}', [PartnerController::class, 'destroy'])
+        ->middleware('abilities:partner-crm.delete')->name('api.v1.partners.destroy');
+    Route::post('/partners/{partner}/interactions', [PartnerController::class, 'recordInteraction'])
+        ->middleware('abilities:partner-crm.record-interaction')->name('api.v1.partners.interactions.store');
+
+    Route::middleware('abilities:grants.view')->group(function () {
+        Route::get('/grant-projects', [GrantProjectController::class, 'index'])->name('api.v1.grant-projects.index');
+        Route::get('/grant-projects/{grantProject}', [GrantProjectController::class, 'show'])->name('api.v1.grant-projects.show');
+        Route::get('/grant-projects/{grantProject}/transactions', [GrantProjectController::class, 'transactions'])->name('api.v1.grant-projects.transactions.index');
+    });
+    Route::post('/grant-projects', [GrantProjectController::class, 'store'])
+        ->middleware('abilities:grants.create')->name('api.v1.grant-projects.store');
+    Route::patch('/grant-projects/{grantProject}', [GrantProjectController::class, 'update'])
+        ->middleware('abilities:grants.update')->name('api.v1.grant-projects.update');
+    Route::delete('/grant-projects/{grantProject}', [GrantProjectController::class, 'destroy'])
+        ->middleware('abilities:grants.delete')->name('api.v1.grant-projects.destroy');
+    Route::post('/grant-projects/{grantProject}/transactions', [GrantProjectController::class, 'recordTransaction'])
+        ->middleware('abilities:grants.record-transaction')->name('api.v1.grant-projects.transactions.store');
 });

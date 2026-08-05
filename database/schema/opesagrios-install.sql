@@ -1408,6 +1408,67 @@ CREATE TABLE `forms` (
 
 /*!40000 ALTER TABLE `forms` DISABLE KEYS */;
 /*!40000 ALTER TABLE `forms` ENABLE KEYS */;
+DROP TABLE IF EXISTS `grant_projects`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `grant_projects` (
+  `id` char(26) NOT NULL,
+  `company_id` char(26) NOT NULL,
+  `partner_id` char(26) DEFAULT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `total_amount` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `currency` varchar(3) NOT NULL DEFAULT 'USD',
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'planned',
+  `received_amount` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `spent_amount` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `created_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `grant_projects_partner_id_foreign` (`partner_id`),
+  KEY `grant_projects_created_by_foreign` (`created_by`),
+  KEY `grant_projects_company_id_partner_id_index` (`company_id`,`partner_id`),
+  KEY `grant_projects_company_id_status_index` (`company_id`,`status`),
+  CONSTRAINT `grant_projects_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `grant_projects_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `grant_projects_partner_id_foreign` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40000 ALTER TABLE `grant_projects` DISABLE KEYS */;
+/*!40000 ALTER TABLE `grant_projects` ENABLE KEYS */;
+DROP TABLE IF EXISTS `grant_transactions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `grant_transactions` (
+  `id` char(26) NOT NULL,
+  `company_id` char(26) NOT NULL,
+  `grant_project_id` char(26) NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `amount` decimal(15,2) NOT NULL,
+  `transaction_date` date NOT NULL,
+  `method` varchar(255) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `recorded_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `grant_transactions_grant_project_id_foreign` (`grant_project_id`),
+  KEY `grant_transactions_recorded_by_foreign` (`recorded_by`),
+  KEY `grant_transactions_company_id_grant_project_id_index` (`company_id`,`grant_project_id`),
+  KEY `grant_transactions_company_id_type_index` (`company_id`,`type`),
+  CONSTRAINT `grant_transactions_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `grant_transactions_grant_project_id_foreign` FOREIGN KEY (`grant_project_id`) REFERENCES `grant_projects` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `grant_transactions_recorded_by_foreign` FOREIGN KEY (`recorded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40000 ALTER TABLE `grant_transactions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `grant_transactions` ENABLE KEYS */;
 DROP TABLE IF EXISTS `irrigation_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1809,7 +1870,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
@@ -1877,7 +1938,8 @@ INSERT INTO `migrations` VALUES
 (61,'2026_08_26_000001_create_field_operations_tables',1),
 (62,'2026_08_27_000001_create_asset_maintenance_records_table',1),
 (63,'2026_08_28_000001_create_utility_tables',1),
-(64,'2026_08_29_000001_create_fleet_trips_table',1);
+(64,'2026_08_29_000001_create_fleet_trips_table',1),
+(65,'2026_08_30_000001_create_partner_grant_tables',1);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 DROP TABLE IF EXISTS `notifications`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -1983,6 +2045,31 @@ CREATE TABLE `partner_commissions` (
 
 /*!40000 ALTER TABLE `partner_commissions` DISABLE KEYS */;
 /*!40000 ALTER TABLE `partner_commissions` ENABLE KEYS */;
+DROP TABLE IF EXISTS `partner_interactions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `partner_interactions` (
+  `id` char(26) NOT NULL,
+  `company_id` char(26) NOT NULL,
+  `partner_id` char(26) NOT NULL,
+  `interaction_date` date NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `summary` text NOT NULL,
+  `recorded_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `partner_interactions_partner_id_foreign` (`partner_id`),
+  KEY `partner_interactions_recorded_by_foreign` (`recorded_by`),
+  KEY `partner_interactions_company_id_partner_id_index` (`company_id`,`partner_id`),
+  CONSTRAINT `partner_interactions_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `partner_interactions_partner_id_foreign` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `partner_interactions_recorded_by_foreign` FOREIGN KEY (`recorded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40000 ALTER TABLE `partner_interactions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `partner_interactions` ENABLE KEYS */;
 DROP TABLE IF EXISTS `partner_payouts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2009,6 +2096,35 @@ CREATE TABLE `partner_payouts` (
 
 /*!40000 ALTER TABLE `partner_payouts` DISABLE KEYS */;
 /*!40000 ALTER TABLE `partner_payouts` ENABLE KEYS */;
+DROP TABLE IF EXISTS `partners`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `partners` (
+  `id` char(26) NOT NULL,
+  `company_id` char(26) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `contact_person` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `phone` varchar(255) DEFAULT NULL,
+  `address` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`address`)),
+  `notes` text DEFAULT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'active',
+  `created_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `partners_created_by_foreign` (`created_by`),
+  KEY `partners_company_id_type_index` (`company_id`,`type`),
+  KEY `partners_company_id_status_index` (`company_id`,`status`),
+  CONSTRAINT `partners_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `partners_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40000 ALTER TABLE `partners` DISABLE KEYS */;
+/*!40000 ALTER TABLE `partners` ENABLE KEYS */;
 DROP TABLE IF EXISTS `password_reset_tokens`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2346,6 +2462,16 @@ INSERT INTO `permission_role` VALUES
 (1,121),
 (1,122),
 (1,123),
+(1,124),
+(1,125),
+(1,126),
+(1,127),
+(1,128),
+(1,129),
+(1,130),
+(1,131),
+(1,132),
+(1,133),
 (2,1),
 (2,2),
 (2,3),
@@ -2469,6 +2595,16 @@ INSERT INTO `permission_role` VALUES
 (2,121),
 (2,122),
 (2,123),
+(2,124),
+(2,125),
+(2,126),
+(2,127),
+(2,128),
+(2,129),
+(2,130),
+(2,131),
+(2,132),
+(2,133),
 (3,1),
 (3,5),
 (3,6),
@@ -2558,6 +2694,13 @@ INSERT INTO `permission_role` VALUES
 (3,120),
 (3,121),
 (3,123),
+(3,124),
+(3,125),
+(3,126),
+(3,128),
+(3,129),
+(3,130),
+(3,131),
 (4,1),
 (4,5),
 (4,6),
@@ -2614,6 +2757,9 @@ INSERT INTO `permission_role` VALUES
 (4,115),
 (4,116),
 (4,119),
+(4,124),
+(4,129),
+(4,133),
 (5,1),
 (5,5),
 (5,6),
@@ -2674,7 +2820,9 @@ INSERT INTO `permission_role` VALUES
 (7,99),
 (7,104),
 (7,110),
-(7,119);
+(7,119),
+(7,124),
+(7,129);
 /*!40000 ALTER TABLE `permission_role` ENABLE KEYS */;
 DROP TABLE IF EXISTS `permissions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -2688,134 +2836,144 @@ CREATE TABLE `permissions` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `permissions_slug_unique` (`slug`)
-) ENGINE=InnoDB AUTO_INCREMENT=124 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=134 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40000 ALTER TABLE `permissions` DISABLE KEYS */;
 INSERT INTO `permissions` VALUES
-(1,'business.view','View Business','Business','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(2,'business.update','Update Business','Business','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(3,'business.manage-branding','Manage Branding Business','Business','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(4,'business.manage-stationery','Manage Stationery Business','Business','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(5,'sales.view','View Sales','Sales','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(6,'sales.create','Create Sales','Sales','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(7,'sales.update','Update Sales','Sales','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(8,'sales.issue','Issue Sales','Sales','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(9,'sales.void','Void Sales','Sales','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(10,'sales.approve','Approve Sales','Sales','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(11,'receipts.view','View Receipts','Receipts','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(12,'receipts.create','Create Receipts','Receipts','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(13,'receipts.void','Void Receipts','Receipts','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(14,'payments.view','View Payments','Payments','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(15,'payments.record','Record Payments','Payments','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(16,'payments.refund','Refund Payments','Payments','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(17,'expenses.view','View Expenses','Expenses','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(18,'expenses.create','Create Expenses','Expenses','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(19,'expenses.update','Update Expenses','Expenses','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(20,'expenses.pay','Pay Expenses','Expenses','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(21,'expenses.void','Void Expenses','Expenses','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(22,'employees.view','View Employees','Employees','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(23,'employees.create','Create Employees','Employees','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(24,'employees.update','Update Employees','Employees','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(25,'employees.delete','Delete Employees','Employees','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(26,'payroll.view','View Payroll','Payroll','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(27,'payroll.run','Run Payroll','Payroll','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(28,'payroll.approve','Approve Payroll','Payroll','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(29,'payroll.pay','Pay Payroll','Payroll','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(30,'payroll.void','Void Payroll','Payroll','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(31,'leave.view','View Leave','Leave','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(32,'leave.request','Request Leave','Leave','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(33,'leave.approve','Approve Leave','Leave','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(34,'customers.view','View Customers','Customers','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(35,'customers.create','Create Customers','Customers','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(36,'customers.update','Update Customers','Customers','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(37,'customers.delete','Delete Customers','Customers','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(38,'products.view','View Products','Products','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(39,'products.create','Create Products','Products','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(40,'products.update','Update Products','Products','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(41,'products.delete','Delete Products','Products','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(42,'products.adjust-stock','Adjust Stock Products','Products','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(43,'products.manage-locations','Manage Locations Products','Products','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(44,'assets.view','View Assets','Assets','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(45,'assets.create','Create Assets','Assets','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(46,'assets.update','Update Assets','Assets','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(47,'assets.depreciate','Depreciate Assets','Assets','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(48,'assets.dispose','Dispose Assets','Assets','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(49,'assets.record-maintenance','Record Maintenance Assets','Assets','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(50,'assets.record-trip','Record Trip Assets','Assets','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(51,'banking.view','View Banking','Banking','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(52,'banking.manage','Manage Banking','Banking','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(53,'banking.import','Import Banking','Banking','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(54,'banking.reconcile','Reconcile Banking','Banking','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(55,'papers.view','View Papers','Papers','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(56,'papers.create','Create Papers','Papers','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(57,'papers.issue','Issue Papers','Papers','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(58,'papers.void','Void Papers','Papers','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(59,'forms.view','View Forms','Forms','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(60,'forms.create','Create Forms','Forms','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(61,'forms.update','Update Forms','Forms','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(62,'forms.delete','Delete Forms','Forms','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(63,'forms.responses','Responses Forms','Forms','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(64,'events.view','View Events','Events','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(65,'events.create','Create Events','Events','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(66,'events.update','Update Events','Events','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(67,'events.void','Void Events','Events','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(68,'events.check-in','Check In Events','Events','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(69,'loyalty.view','View Loyalty','Loyalty','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(70,'loyalty.manage','Manage Loyalty','Loyalty','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(71,'loyalty.redeem','Redeem Loyalty','Loyalty','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(72,'reports.view','View Reports','Reports','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(73,'reports.export','Export Reports','Reports','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(74,'accounting.view','View Accounting','Accounting','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(75,'accounting.export','Export Accounting','Accounting','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(76,'accounting.manage','Manage Accounting','Accounting','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(77,'partners.view','View Partners','Partners','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(78,'partners.manage','Manage Partners','Partners','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(79,'partners.issue','Issue Partners','Partners','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(80,'partners.withdraw','Withdraw Partners','Partners','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(81,'users.view','View Users','Users','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(82,'users.invite','Invite Users','Users','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(83,'users.update-role','Update Role Users','Users','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(84,'users.remove','Remove Users','Users','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(85,'devices.view','View Devices','Devices','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(86,'devices.revoke','Revoke Devices','Devices','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(87,'settings.view','View Settings','Settings','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(88,'settings.update','Update Settings','Settings','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(89,'farms.view','View Farms','Farms','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(90,'farms.create','Create Farms','Farms','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(91,'farms.update','Update Farms','Farms','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(92,'farms.delete','Delete Farms','Farms','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(93,'farms.record-soil-test','Record Soil Test Farms','Farms','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(94,'farms.record-irrigation','Record Irrigation Farms','Farms','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(95,'crops.view','View Crops','Crops','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(96,'crops.create','Create Crops','Crops','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(97,'crops.update','Update Crops','Crops','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(98,'crops.record-harvest','Record Harvest Crops','Crops','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(99,'procurement.view','View Procurement','Procurement','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(100,'procurement.create','Create Procurement','Procurement','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(101,'procurement.update','Update Procurement','Procurement','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(102,'procurement.issue','Issue Procurement','Procurement','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(103,'procurement.receive','Receive Procurement','Procurement','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(104,'livestock.view','View Livestock','Livestock','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(105,'livestock.create','Create Livestock','Livestock','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(106,'livestock.update','Update Livestock','Livestock','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(107,'livestock.delete','Delete Livestock','Livestock','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(108,'livestock.record-health','Record Health Livestock','Livestock','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(109,'livestock.record-production','Record Production Livestock','Livestock','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(110,'cooperative.view','View Cooperative','Cooperative','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(111,'cooperative.create','Create Cooperative','Cooperative','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(112,'cooperative.update','Update Cooperative','Cooperative','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(113,'cooperative.delete','Delete Cooperative','Cooperative','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(114,'cooperative.record-contribution','Record Contribution Cooperative','Cooperative','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(115,'cooperative.disburse-loan','Disburse Loan Cooperative','Cooperative','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(116,'cooperative.record-repayment','Record Repayment Cooperative','Cooperative','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(117,'cooperative.record-attendance','Record Attendance Cooperative','Cooperative','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(118,'cooperative.cast-vote','Cast Vote Cooperative','Cooperative','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(119,'utilities.view','View Utilities','Utilities','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(120,'utilities.create','Create Utilities','Utilities','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(121,'utilities.update','Update Utilities','Utilities','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(122,'utilities.delete','Delete Utilities','Utilities','2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(123,'utilities.record-reading','Record Reading Utilities','Utilities','2026-08-05 12:15:16','2026-08-05 12:15:16');
+(1,'business.view','View Business','Business','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(2,'business.update','Update Business','Business','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(3,'business.manage-branding','Manage Branding Business','Business','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(4,'business.manage-stationery','Manage Stationery Business','Business','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(5,'sales.view','View Sales','Sales','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(6,'sales.create','Create Sales','Sales','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(7,'sales.update','Update Sales','Sales','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(8,'sales.issue','Issue Sales','Sales','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(9,'sales.void','Void Sales','Sales','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(10,'sales.approve','Approve Sales','Sales','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(11,'receipts.view','View Receipts','Receipts','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(12,'receipts.create','Create Receipts','Receipts','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(13,'receipts.void','Void Receipts','Receipts','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(14,'payments.view','View Payments','Payments','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(15,'payments.record','Record Payments','Payments','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(16,'payments.refund','Refund Payments','Payments','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(17,'expenses.view','View Expenses','Expenses','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(18,'expenses.create','Create Expenses','Expenses','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(19,'expenses.update','Update Expenses','Expenses','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(20,'expenses.pay','Pay Expenses','Expenses','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(21,'expenses.void','Void Expenses','Expenses','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(22,'employees.view','View Employees','Employees','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(23,'employees.create','Create Employees','Employees','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(24,'employees.update','Update Employees','Employees','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(25,'employees.delete','Delete Employees','Employees','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(26,'payroll.view','View Payroll','Payroll','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(27,'payroll.run','Run Payroll','Payroll','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(28,'payroll.approve','Approve Payroll','Payroll','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(29,'payroll.pay','Pay Payroll','Payroll','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(30,'payroll.void','Void Payroll','Payroll','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(31,'leave.view','View Leave','Leave','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(32,'leave.request','Request Leave','Leave','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(33,'leave.approve','Approve Leave','Leave','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(34,'customers.view','View Customers','Customers','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(35,'customers.create','Create Customers','Customers','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(36,'customers.update','Update Customers','Customers','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(37,'customers.delete','Delete Customers','Customers','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(38,'products.view','View Products','Products','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(39,'products.create','Create Products','Products','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(40,'products.update','Update Products','Products','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(41,'products.delete','Delete Products','Products','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(42,'products.adjust-stock','Adjust Stock Products','Products','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(43,'products.manage-locations','Manage Locations Products','Products','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(44,'assets.view','View Assets','Assets','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(45,'assets.create','Create Assets','Assets','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(46,'assets.update','Update Assets','Assets','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(47,'assets.depreciate','Depreciate Assets','Assets','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(48,'assets.dispose','Dispose Assets','Assets','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(49,'assets.record-maintenance','Record Maintenance Assets','Assets','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(50,'assets.record-trip','Record Trip Assets','Assets','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(51,'banking.view','View Banking','Banking','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(52,'banking.manage','Manage Banking','Banking','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(53,'banking.import','Import Banking','Banking','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(54,'banking.reconcile','Reconcile Banking','Banking','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(55,'papers.view','View Papers','Papers','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(56,'papers.create','Create Papers','Papers','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(57,'papers.issue','Issue Papers','Papers','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(58,'papers.void','Void Papers','Papers','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(59,'forms.view','View Forms','Forms','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(60,'forms.create','Create Forms','Forms','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(61,'forms.update','Update Forms','Forms','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(62,'forms.delete','Delete Forms','Forms','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(63,'forms.responses','Responses Forms','Forms','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(64,'events.view','View Events','Events','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(65,'events.create','Create Events','Events','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(66,'events.update','Update Events','Events','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(67,'events.void','Void Events','Events','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(68,'events.check-in','Check In Events','Events','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(69,'loyalty.view','View Loyalty','Loyalty','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(70,'loyalty.manage','Manage Loyalty','Loyalty','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(71,'loyalty.redeem','Redeem Loyalty','Loyalty','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(72,'reports.view','View Reports','Reports','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(73,'reports.export','Export Reports','Reports','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(74,'accounting.view','View Accounting','Accounting','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(75,'accounting.export','Export Accounting','Accounting','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(76,'accounting.manage','Manage Accounting','Accounting','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(77,'partners.view','View Partners','Partners','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(78,'partners.manage','Manage Partners','Partners','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(79,'partners.issue','Issue Partners','Partners','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(80,'partners.withdraw','Withdraw Partners','Partners','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(81,'users.view','View Users','Users','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(82,'users.invite','Invite Users','Users','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(83,'users.update-role','Update Role Users','Users','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(84,'users.remove','Remove Users','Users','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(85,'devices.view','View Devices','Devices','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(86,'devices.revoke','Revoke Devices','Devices','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(87,'settings.view','View Settings','Settings','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(88,'settings.update','Update Settings','Settings','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(89,'farms.view','View Farms','Farms','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(90,'farms.create','Create Farms','Farms','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(91,'farms.update','Update Farms','Farms','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(92,'farms.delete','Delete Farms','Farms','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(93,'farms.record-soil-test','Record Soil Test Farms','Farms','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(94,'farms.record-irrigation','Record Irrigation Farms','Farms','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(95,'crops.view','View Crops','Crops','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(96,'crops.create','Create Crops','Crops','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(97,'crops.update','Update Crops','Crops','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(98,'crops.record-harvest','Record Harvest Crops','Crops','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(99,'procurement.view','View Procurement','Procurement','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(100,'procurement.create','Create Procurement','Procurement','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(101,'procurement.update','Update Procurement','Procurement','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(102,'procurement.issue','Issue Procurement','Procurement','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(103,'procurement.receive','Receive Procurement','Procurement','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(104,'livestock.view','View Livestock','Livestock','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(105,'livestock.create','Create Livestock','Livestock','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(106,'livestock.update','Update Livestock','Livestock','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(107,'livestock.delete','Delete Livestock','Livestock','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(108,'livestock.record-health','Record Health Livestock','Livestock','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(109,'livestock.record-production','Record Production Livestock','Livestock','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(110,'cooperative.view','View Cooperative','Cooperative','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(111,'cooperative.create','Create Cooperative','Cooperative','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(112,'cooperative.update','Update Cooperative','Cooperative','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(113,'cooperative.delete','Delete Cooperative','Cooperative','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(114,'cooperative.record-contribution','Record Contribution Cooperative','Cooperative','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(115,'cooperative.disburse-loan','Disburse Loan Cooperative','Cooperative','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(116,'cooperative.record-repayment','Record Repayment Cooperative','Cooperative','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(117,'cooperative.record-attendance','Record Attendance Cooperative','Cooperative','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(118,'cooperative.cast-vote','Cast Vote Cooperative','Cooperative','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(119,'utilities.view','View Utilities','Utilities','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(120,'utilities.create','Create Utilities','Utilities','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(121,'utilities.update','Update Utilities','Utilities','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(122,'utilities.delete','Delete Utilities','Utilities','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(123,'utilities.record-reading','Record Reading Utilities','Utilities','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(124,'partner-crm.view','View Partner Crm','Partner Crm','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(125,'partner-crm.create','Create Partner Crm','Partner Crm','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(126,'partner-crm.update','Update Partner Crm','Partner Crm','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(127,'partner-crm.delete','Delete Partner Crm','Partner Crm','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(128,'partner-crm.record-interaction','Record Interaction Partner Crm','Partner Crm','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(129,'grants.view','View Grants','Grants','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(130,'grants.create','Create Grants','Grants','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(131,'grants.update','Update Grants','Grants','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(132,'grants.delete','Delete Grants','Grants','2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(133,'grants.record-transaction','Record Transaction Grants','Grants','2026-08-05 13:11:03','2026-08-05 13:11:03');
 /*!40000 ALTER TABLE `permissions` ENABLE KEYS */;
 DROP TABLE IF EXISTS `personal_access_tokens`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -3022,13 +3180,13 @@ CREATE TABLE `roles` (
 
 /*!40000 ALTER TABLE `roles` DISABLE KEYS */;
 INSERT INTO `roles` VALUES
-(1,'owner','Owner',NULL,1,1,'2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(2,'administrator','Administrator',NULL,2,1,'2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(3,'manager','Manager',NULL,3,1,'2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(4,'accountant','Accountant',NULL,4,1,'2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(5,'sales-officer','Sales Officer',NULL,5,1,'2026-08-05 12:15:16','2026-08-05 12:15:16'),
-(6,'cashier','Cashier',NULL,6,1,'2026-08-05 12:15:17','2026-08-05 12:15:17'),
-(7,'read-only','Read Only',NULL,7,1,'2026-08-05 12:15:17','2026-08-05 12:15:17');
+(1,'owner','Owner',NULL,1,1,'2026-08-05 13:11:03','2026-08-05 13:11:03'),
+(2,'administrator','Administrator',NULL,2,1,'2026-08-05 13:11:04','2026-08-05 13:11:04'),
+(3,'manager','Manager',NULL,3,1,'2026-08-05 13:11:04','2026-08-05 13:11:04'),
+(4,'accountant','Accountant',NULL,4,1,'2026-08-05 13:11:04','2026-08-05 13:11:04'),
+(5,'sales-officer','Sales Officer',NULL,5,1,'2026-08-05 13:11:04','2026-08-05 13:11:04'),
+(6,'cashier','Cashier',NULL,6,1,'2026-08-05 13:11:04','2026-08-05 13:11:04'),
+(7,'read-only','Read Only',NULL,7,1,'2026-08-05 13:11:04','2026-08-05 13:11:04');
 /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
 DROP TABLE IF EXISTS `salary_components`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

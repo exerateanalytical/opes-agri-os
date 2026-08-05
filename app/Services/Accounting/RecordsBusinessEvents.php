@@ -5,6 +5,7 @@ namespace App\Services\Accounting;
 use App\Enums\PaymentMethod;
 use App\Models\Company;
 use App\Models\Document;
+use App\Models\GrantTransaction;
 use App\Models\JournalEntry;
 use App\Models\Loan;
 use App\Models\LoanRepayment;
@@ -300,6 +301,72 @@ class RecordsBusinessEvents
             source: $repayment,
             narration: 'Remboursement de prêt — '.($repayment->loan?->member?->contact?->name ?? ''),
             reference: $repayment->reference,
+            actor: $actor,
+        );
+    }
+
+    /**
+     * A grant partner's money arriving. Unlike a harvest or a member's own
+     * contribution, this is cash the business did not have and did not
+     * earn from a sale — restricted income, posted the moment it lands, the
+     * same "real cash moves, post it" reasoning that decided loans (V3 M2).
+     */
+    public function recordGrantReceipt(GrantTransaction $transaction, Company $company, string $destination, ?User $actor = null): ?JournalEntry
+    {
+        if (! $this->chartIsReady($company)) {
+            return null;
+        }
+
+        $amount = round((float) $transaction->amount, 2);
+
+        if ($amount <= 0) {
+            return null;
+        }
+
+        $transaction->loadMissing('project.partner');
+
+        return $this->ledger->post(
+            company: $company,
+            journal: $destination === 'cash' ? 'CA' : 'BQ',
+            entryDate: $transaction->transaction_date?->toDateString() ?? now()->toDateString(),
+            lines: [
+                ['account' => $destination, 'debit' => $amount, 'narration' => $transaction->project?->partner?->name],
+                ['account' => 'grant_income', 'credit' => $amount, 'narration' => $transaction->project?->name],
+            ],
+            source: $transaction,
+            narration: 'Subvention reçue — '.($transaction->project?->name ?? ''),
+            actor: $actor,
+        );
+    }
+
+    /**
+     * A grant-funded project spending what it received. The mirror of a
+     * receipt: cash falls, the project's cost account rises.
+     */
+    public function recordGrantExpenditure(GrantTransaction $transaction, Company $company, string $source, ?User $actor = null): ?JournalEntry
+    {
+        if (! $this->chartIsReady($company)) {
+            return null;
+        }
+
+        $amount = round((float) $transaction->amount, 2);
+
+        if ($amount <= 0) {
+            return null;
+        }
+
+        $transaction->loadMissing('project.partner');
+
+        return $this->ledger->post(
+            company: $company,
+            journal: $source === 'cash' ? 'CA' : 'BQ',
+            entryDate: $transaction->transaction_date?->toDateString() ?? now()->toDateString(),
+            lines: [
+                ['account' => 'project_expenses', 'debit' => $amount, 'narration' => $transaction->project?->name],
+                ['account' => $source, 'credit' => $amount],
+            ],
+            source: $transaction,
+            narration: 'Dépense projet — '.($transaction->project?->name ?? ''),
             actor: $actor,
         );
     }

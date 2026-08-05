@@ -19,9 +19,11 @@ use App\Models\Field;
 use App\Models\FixedAsset;
 use App\Models\FleetTrip;
 use App\Models\Form;
+use App\Models\GrantProject;
 use App\Models\IrrigationLog;
 use App\Models\Item;
 use App\Models\Loan;
+use App\Models\Partner;
 use App\Models\PartnerClient;
 use App\Models\Payment;
 use App\Models\PayrollRun;
@@ -285,6 +287,28 @@ return [
         'default' => true,
         'groups' => ['utilities'],
         'models' => [UtilityAccount::class],
+    ],
+
+    'partner_crm' => [
+        'label' => 'Partner & NGO CRM',
+        'description' => 'The NGOs, donors and government partners the business works with, and a log of contact with each.',
+        'icon' => 'users',
+        'default' => true,
+        'groups' => ['partner-crm'],
+        'models' => [Partner::class],
+    ],
+
+    'grants' => [
+        'label' => 'Project & Grant Management',
+        'description' => 'Funded projects, and the grant money received and spent against them.',
+        'icon' => 'banknotes',
+        'default' => true,
+        // No 'requires': a grant project's partner_id is optional — a
+        // business can track a self-funded project's spend without ever
+        // switching Partner CRM on, same reasoning livestock's farm_id is
+        // optional rather than requiring farms.
+        'groups' => ['grants'],
+        'models' => [GrantProject::class],
     ],
 
     /*
