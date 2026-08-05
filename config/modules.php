@@ -17,6 +17,7 @@ use App\Models\Farm;
 use App\Models\Field;
 use App\Models\FixedAsset;
 use App\Models\Form;
+use App\Models\IrrigationLog;
 use App\Models\Item;
 use App\Models\Loan;
 use App\Models\PartnerClient;
@@ -26,6 +27,7 @@ use App\Models\Payslip;
 use App\Models\PurchaseOrder;
 use App\Models\Receipt;
 use App\Models\Season;
+use App\Models\SoilTestRecord;
 use App\Models\StockLocation;
 use App\Models\Stocktake;
 use App\Models\Ticket;
@@ -226,7 +228,7 @@ return [
         'icon' => 'briefcase',
         'default' => true,
         'groups' => ['farms'],
-        'models' => [Farm::class, Field::class, Season::class],
+        'models' => [Farm::class, Field::class, Season::class, SoilTestRecord::class, IrrigationLog::class],
     ],
 
     'crops' => [

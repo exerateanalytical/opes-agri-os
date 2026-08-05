@@ -3,8 +3,12 @@
 namespace App\Domain\Agri\Http\Controllers\Api\V1;
 
 use App\Domain\Agri\Http\Requests\StoreFieldRequest;
+use App\Domain\Agri\Http\Requests\StoreIrrigationLogRequest;
+use App\Domain\Agri\Http\Requests\StoreSoilTestRecordRequest;
 use App\Domain\Agri\Http\Requests\UpdateFieldRequest;
 use App\Domain\Agri\Http\Resources\FieldResource;
+use App\Domain\Agri\Http\Resources\IrrigationLogResource;
+use App\Domain\Agri\Http\Resources\SoilTestRecordResource;
 use App\Http\Controllers\Api\V1\Controller;
 use App\Models\Field;
 use Illuminate\Http\JsonResponse;
@@ -54,5 +58,41 @@ class FieldController extends Controller
         $field->delete();
 
         return response()->noContent();
+    }
+
+    public function soilTests(Field $field): AnonymousResourceCollection
+    {
+        $this->authorize('view', $field);
+
+        return SoilTestRecordResource::collection(
+            $field->soilTestRecords()->orderByDesc('tested_on')->get()
+        );
+    }
+
+    public function recordSoilTest(StoreSoilTestRecordRequest $request, Field $field): JsonResponse
+    {
+        $record = $field->soilTestRecords()->create($request->validated() + [
+            'created_by' => $request->user()->id,
+        ]);
+
+        return SoilTestRecordResource::make($record)->response()->setStatusCode(201);
+    }
+
+    public function irrigationLogs(Field $field): AnonymousResourceCollection
+    {
+        $this->authorize('view', $field);
+
+        return IrrigationLogResource::collection(
+            $field->irrigationLogs()->orderByDesc('irrigated_on')->get()
+        );
+    }
+
+    public function recordIrrigation(StoreIrrigationLogRequest $request, Field $field): JsonResponse
+    {
+        $log = $field->irrigationLogs()->create($request->validated() + [
+            'created_by' => $request->user()->id,
+        ]);
+
+        return IrrigationLogResource::make($log)->response()->setStatusCode(201);
     }
 }

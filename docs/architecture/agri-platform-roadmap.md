@@ -150,9 +150,47 @@ pass — `Meetings` and `Votes` tabs alongside `Members`/`Loans` on the existing
 the same modal-form pattern (`RecordContribution`) established for lifecycle actions elsewhere in this
 module.
 
-**Later, unscheduled:** Fisheries, Beekeeping, Forestry, Greenhouse, Nursery & Seed, Soil & Fertility,
-Irrigation, Machinery & Equipment, Utility Management, Fleet & Logistics, Supply Chain & Traceability,
-Partner & NGO CRM, Project & Grant Management, Analytics & BI beyond what Sales/Reports already provide.
+**V4 — field operations and the rest of the module inventory.** Phased by how much new domain shape each
+piece actually needs, not by the order §3 lists them in:
+
+- **Phase 1 shipped: field operations.** `SoilTestRecord` (pH, N-P-K, organic matter, recommendations)
+  and `IrrigationLog` (method, duration, volume), both keyed to `Field` the same way `AnimalHealthRecord`
+  is keyed to `Animal` — a dated record with values and notes, no lifecycle of its own. Both reuse the
+  `farms` module and permission group (`record-soil-test`/`record-irrigation` actions on `FieldPolicy`)
+  rather than a new module toggle, since a soil test or irrigation event only makes sense once Farms is
+  already on. Greenhouse Management was left out — a business needing environmental logs beyond what a
+  soil test or irrigation record already covers gets that as its own milestone when the demand is real,
+  not spec'd speculatively now.
+- **Phase 2: Machinery & Equipment, Utility Management.** Extend the existing `FixedAsset`/Assets domain
+  rather than starting a new one — a tractor is a fixed asset with a maintenance log, not a new concept.
+- **Phase 3: Fleet & Logistics, Supply Chain & Traceability.** New domain shape (route/trip tracking,
+  chain-of-custody) — its own design pass when it's next.
+- **Phase 4: Partner & NGO CRM, Project & Grant Management.** New domain shape (grant milestones,
+  disbursement conditions) — closer to Cooperative's shape than to Sales', worth designing alongside
+  whichever comes first.
+- **Phase 5: Analytics & Business Intelligence** beyond what Sales/Reports already provide — dashboards
+  and cross-module reporting once there's enough shipped data across modules to make it worth building.
+
+**Five inventory items are already usable today and were deliberately NOT rebuilt as separate modules,**
+because doing so would duplicate schema that already exists:
+
+- **Poultry Management** — an `Animal` with `species` set to whatever poultry breed, or an `AnimalBatch`
+  for a flock counted rather than individually tagged (the batch tracking V2 M2 built was written with
+  poultry as the motivating case).
+- **Fisheries & Aquaculture** — an `AnimalBatch` per pond/tank, `species` set accordingly; a fish is
+  counted the same way a flock is, not individually tagged.
+- **Beekeeping** — an `AnimalBatch` per hive; production (honey) records through the same
+  `ProductionRecorder` a dairy animal's milk does.
+- **Forestry & Agroforestry** — a `CropCycle` with a long `planned_harvest_date`; nothing about the
+  model assumes an annual crop.
+- **Nursery & Seed Management** — a `CropCycle` in `planned`/`planted`/`growing` status ahead of
+  transplant, or its own short-lived cycle if a business tracks nursery stock as a distinct saleable
+  item (seedlings are just another `Item` of `type=product`).
+
+A business using OPES AGRI OS for any of these five today sets the right `species`/crop name and gets
+correct behaviour — no code change needed, only choosing sensible values on the existing forms. If a
+genuine gap surfaces later (poultry-specific batch mortality causes, apiary inspection checklists,
+silvicultural rotation schedules), that gap gets its own milestone then, not speculative schema now.
 
 ## 5. Documentation approach
 

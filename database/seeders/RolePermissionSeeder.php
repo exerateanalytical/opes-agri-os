@@ -49,7 +49,7 @@ class RolePermissionSeeder extends Seeder
             'Users' => ['view'],
             'Devices' => ['view'],
             'Settings' => ['view'],
-            'Farms' => ['view', 'create', 'update'],
+            'Farms' => ['view', 'create', 'update', 'record-soil-test', 'record-irrigation'],
             'Crops' => ['view', 'create', 'update', 'record-harvest'],
             'Procurement' => ['view', 'create', 'update', 'issue'],
             'Livestock' => ['view', 'create', 'update', 'record-health', 'record-production'],

@@ -61,7 +61,7 @@ class Permissions
         // Farms, fields and seasons together — one group rather than three,
         // since one role always administers all of it. See
         // docs/architecture/agri-platform-roadmap.md.
-        'Farms' => ['view', 'create', 'update', 'delete'],
+        'Farms' => ['view', 'create', 'update', 'delete', 'record-soil-test', 'record-irrigation'],
         'Crops' => ['view', 'create', 'update', 'record-harvest'],
         'Procurement' => ['view', 'create', 'update', 'issue', 'receive'],
         // Animals plus their health and production records together — one

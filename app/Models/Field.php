@@ -45,4 +45,14 @@ class Field extends Model
     {
         return $this->hasMany(CropCycle::class);
     }
+
+    public function soilTestRecords(): HasMany
+    {
+        return $this->hasMany(SoilTestRecord::class);
+    }
+
+    public function irrigationLogs(): HasMany
+    {
+        return $this->hasMany(IrrigationLog::class);
+    }
 }

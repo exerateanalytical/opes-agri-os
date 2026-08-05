@@ -122,4 +122,37 @@ class FarmManagementTest extends TestCase
 
         Livewire::actingAs($this->owner)->test(FarmsIndex::class)->assertForbidden();
     }
+
+    public function test_it_records_a_soil_test(): void
+    {
+        $farm = Farm::create(['name' => 'Green Valley Farm']);
+        $field = Field::create(['farm_id' => $farm->id, 'name' => 'North Plot']);
+
+        Livewire::actingAs($this->owner)
+            ->test(FarmsIndex::class)
+            ->call('openSoilTest', $field->id)
+            ->set('soilTestedOn', '2026-08-01')
+            ->set('soilPh', '6.5')
+            ->call('saveSoilTest')
+            ->assertHasNoErrors();
+
+        $this->assertSame(1, $field->soilTestRecords()->count());
+    }
+
+    public function test_it_records_an_irrigation_log(): void
+    {
+        $farm = Farm::create(['name' => 'Green Valley Farm']);
+        $field = Field::create(['farm_id' => $farm->id, 'name' => 'North Plot']);
+
+        Livewire::actingAs($this->owner)
+            ->test(FarmsIndex::class)
+            ->call('openIrrigation', $field->id)
+            ->set('irrigatedOn', '2026-08-01')
+            ->set('irrigationMethod', 'drip')
+            ->set('irrigationDuration', '30')
+            ->call('saveIrrigation')
+            ->assertHasNoErrors();
+
+        $this->assertSame(1, $field->irrigationLogs()->count());
+    }
 }

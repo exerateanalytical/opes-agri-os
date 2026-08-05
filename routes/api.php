@@ -91,6 +91,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         Route::get('/farms/{farm}', [FarmController::class, 'show'])->name('api.v1.farms.show');
         Route::get('/fields', [FieldController::class, 'index'])->name('api.v1.fields.index');
         Route::get('/fields/{field}', [FieldController::class, 'show'])->name('api.v1.fields.show');
+        Route::get('/fields/{field}/soil-tests', [FieldController::class, 'soilTests'])->name('api.v1.fields.soil-tests.index');
+        Route::get('/fields/{field}/irrigation-logs', [FieldController::class, 'irrigationLogs'])->name('api.v1.fields.irrigation-logs.index');
         Route::get('/seasons', [SeasonController::class, 'index'])->name('api.v1.seasons.index');
         Route::get('/seasons/{season}', [SeasonController::class, 'show'])->name('api.v1.seasons.show');
     });
@@ -109,6 +111,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         Route::delete('/fields/{field}', [FieldController::class, 'destroy'])->name('api.v1.fields.destroy');
         Route::delete('/seasons/{season}', [SeasonController::class, 'destroy'])->name('api.v1.seasons.destroy');
     });
+    Route::post('/fields/{field}/soil-tests', [FieldController::class, 'recordSoilTest'])
+        ->middleware('abilities:farms.record-soil-test')->name('api.v1.fields.soil-tests.store');
+    Route::post('/fields/{field}/irrigation-logs', [FieldController::class, 'recordIrrigation'])
+        ->middleware('abilities:farms.record-irrigation')->name('api.v1.fields.irrigation-logs.store');
 
     Route::middleware('abilities:crops.view')->group(function () {
         Route::get('/crop-cycles', [CropCycleController::class, 'index'])->name('api.v1.crop-cycles.index');

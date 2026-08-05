@@ -189,7 +189,13 @@
                                 @if ($field->boundary) · {{ count($field->boundary) }} boundary points @endif
                             </p>
                         </div>
-                        <div class="flex shrink-0 gap-2">
+                        <div class="flex shrink-0 flex-wrap justify-end gap-2">
+                            @can('recordSoilTest', $field)
+                                <button type="button" wire:click="openSoilTest('{{ $field->id }}')" class="focusable rounded-lg bg-surface-2 px-2.5 py-1.5 text-[12.5px] font-semibold text-ink-2 hover:bg-tint-blue hover:text-brand">Soil test</button>
+                            @endcan
+                            @can('recordIrrigation', $field)
+                                <button type="button" wire:click="openIrrigation('{{ $field->id }}')" class="focusable rounded-lg bg-surface-2 px-2.5 py-1.5 text-[12.5px] font-semibold text-ink-2 hover:bg-tint-blue hover:text-brand">Irrigation</button>
+                            @endcan
                             @can('update', $field)
                                 <button type="button" wire:click="editField('{{ $field->id }}')" class="focusable rounded-lg px-2.5 py-1.5 text-[12.5px] font-semibold text-brand hover:bg-tint-blue">Edit</button>
                             @endcan
@@ -203,6 +209,92 @@
                 @endforelse
             </div>
         </div>
+
+        @if ($testingFieldId)
+            <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" wire:click.self="closeSoilTest">
+                <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-surface p-5 sm:rounded-2xl">
+                    <h2 class="text-[17px] font-bold text-ink">Record soil test</h2>
+                    <form wire:submit="saveSoilTest" class="mt-4 space-y-4">
+                        <label class="block">
+                            <span class="{{ $labelClass }}">Tested on</span>
+                            <input type="date" wire:model="soilTestedOn" class="{{ $inputClass }}">
+                            @error('soilTestedOn') <p class="mt-1 text-[12.5px] font-medium text-negative">{{ $message }}</p> @enderror
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="block">
+                                <span class="{{ $labelClass }}">pH</span>
+                                <input type="number" step="0.01" wire:model="soilPh" class="{{ $inputClass }}">
+                                @error('soilPh') <p class="mt-1 text-[12.5px] font-medium text-negative">{{ $message }}</p> @enderror
+                            </label>
+                            <label class="block">
+                                <span class="{{ $labelClass }}">Organic matter (%)</span>
+                                <input type="number" step="0.01" wire:model="soilOrganicMatter" class="{{ $inputClass }}">
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <label class="block">
+                                <span class="{{ $labelClass }}">N (ppm)</span>
+                                <input type="number" step="0.01" wire:model="soilNitrogen" class="{{ $inputClass }}">
+                            </label>
+                            <label class="block">
+                                <span class="{{ $labelClass }}">P (ppm)</span>
+                                <input type="number" step="0.01" wire:model="soilPhosphorus" class="{{ $inputClass }}">
+                            </label>
+                            <label class="block">
+                                <span class="{{ $labelClass }}">K (ppm)</span>
+                                <input type="number" step="0.01" wire:model="soilPotassium" class="{{ $inputClass }}">
+                            </label>
+                        </div>
+                        <label class="block">
+                            <span class="{{ $labelClass }}">Recommendations</span>
+                            <textarea wire:model="soilRecommendations" rows="2" class="{{ $inputClass }} h-auto py-3"></textarea>
+                        </label>
+                        <div class="flex gap-2">
+                            <button type="submit" class="tap focusable flex-1 rounded-xl bg-fill-brand px-5 py-3 text-[14.5px] font-semibold text-white">Save</button>
+                            <button type="button" wire:click="closeSoilTest" class="tap focusable rounded-xl bg-surface-2 px-5 py-3 text-[14.5px] font-semibold text-ink-2">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
+
+        @if ($irrigatingFieldId)
+            <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" wire:click.self="closeIrrigation">
+                <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-surface p-5 sm:rounded-2xl">
+                    <h2 class="text-[17px] font-bold text-ink">Record irrigation</h2>
+                    <form wire:submit="saveIrrigation" class="mt-4 space-y-4">
+                        <label class="block">
+                            <span class="{{ $labelClass }}">Irrigated on</span>
+                            <input type="date" wire:model="irrigatedOn" class="{{ $inputClass }}">
+                            @error('irrigatedOn') <p class="mt-1 text-[12.5px] font-medium text-negative">{{ $message }}</p> @enderror
+                        </label>
+                        <label class="block">
+                            <span class="{{ $labelClass }}">Method</span>
+                            <select wire:model="irrigationMethod" class="{{ $inputClass }}">
+                                <option value="drip">Drip</option>
+                                <option value="sprinkler">Sprinkler</option>
+                                <option value="flood">Flood</option>
+                                <option value="manual">Manual</option>
+                            </select>
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="block">
+                                <span class="{{ $labelClass }}">Duration (minutes)</span>
+                                <input type="number" wire:model="irrigationDuration" class="{{ $inputClass }}">
+                            </label>
+                            <label class="block">
+                                <span class="{{ $labelClass }}">Volume (litres)</span>
+                                <input type="number" step="0.01" wire:model="irrigationVolume" class="{{ $inputClass }}">
+                            </label>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="tap focusable flex-1 rounded-xl bg-fill-brand px-5 py-3 text-[14.5px] font-semibold text-white">Save</button>
+                            <button type="button" wire:click="closeIrrigation" class="tap focusable rounded-xl bg-surface-2 px-5 py-3 text-[14.5px] font-semibold text-ink-2">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
     @endif
 
     {{-- ── Seasons ──────────────────────────────────────────────────────── --}}

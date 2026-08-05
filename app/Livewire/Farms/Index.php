@@ -4,6 +4,7 @@ namespace App\Livewire\Farms;
 
 use App\Models\Farm;
 use App\Models\Field;
+use App\Models\IrrigationLog;
 use App\Models\Season;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -60,6 +61,34 @@ class Index extends Component
 
     /** @var array<int, array{lat: string, lng: string}> */
     public array $fieldBoundary = [];
+
+    // ── Soil test form ──────────────────────────────────────────────────
+    public ?string $testingFieldId = null;
+
+    public string $soilTestedOn = '';
+
+    public string $soilPh = '';
+
+    public string $soilNitrogen = '';
+
+    public string $soilPhosphorus = '';
+
+    public string $soilPotassium = '';
+
+    public string $soilOrganicMatter = '';
+
+    public string $soilRecommendations = '';
+
+    // ── Irrigation form ─────────────────────────────────────────────────
+    public ?string $irrigatingFieldId = null;
+
+    public string $irrigatedOn = '';
+
+    public string $irrigationMethod = 'drip';
+
+    public string $irrigationDuration = '';
+
+    public string $irrigationVolume = '';
 
     // ── Season form ─────────────────────────────────────────────────────
     public bool $addingSeason = false;
@@ -234,6 +263,89 @@ class Index extends Component
             'fieldLeaseStart', 'fieldLeaseEnd', 'fieldBoundary',
         ]);
         $this->fieldOwnership = 'owned';
+    }
+
+    public function openSoilTest(string $fieldId): void
+    {
+        $field = Field::findOrFail($fieldId);
+        $this->authorize('recordSoilTest', $field);
+
+        $this->testingFieldId = $field->id;
+        $this->reset(['soilPh', 'soilNitrogen', 'soilPhosphorus', 'soilPotassium', 'soilOrganicMatter', 'soilRecommendations']);
+        $this->soilTestedOn = now()->toDateString();
+    }
+
+    public function closeSoilTest(): void
+    {
+        $this->testingFieldId = null;
+    }
+
+    public function saveSoilTest(): void
+    {
+        $data = $this->validate([
+            'soilTestedOn' => ['required', 'date'],
+            'soilPh' => ['nullable', 'numeric', 'between:0,14'],
+            'soilNitrogen' => ['nullable', 'numeric', 'min:0'],
+            'soilPhosphorus' => ['nullable', 'numeric', 'min:0'],
+            'soilPotassium' => ['nullable', 'numeric', 'min:0'],
+            'soilOrganicMatter' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'soilRecommendations' => ['nullable', 'string'],
+        ]);
+
+        $field = Field::findOrFail($this->testingFieldId);
+        $this->authorize('recordSoilTest', $field);
+
+        $field->soilTestRecords()->create([
+            'tested_on' => $data['soilTestedOn'],
+            'ph' => $data['soilPh'] !== '' ? $data['soilPh'] : null,
+            'nitrogen_ppm' => $data['soilNitrogen'] !== '' ? $data['soilNitrogen'] : null,
+            'phosphorus_ppm' => $data['soilPhosphorus'] !== '' ? $data['soilPhosphorus'] : null,
+            'potassium_ppm' => $data['soilPotassium'] !== '' ? $data['soilPotassium'] : null,
+            'organic_matter_pct' => $data['soilOrganicMatter'] !== '' ? $data['soilOrganicMatter'] : null,
+            'recommendations' => $data['soilRecommendations'] ?: null,
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->testingFieldId = null;
+    }
+
+    public function openIrrigation(string $fieldId): void
+    {
+        $field = Field::findOrFail($fieldId);
+        $this->authorize('recordIrrigation', $field);
+
+        $this->irrigatingFieldId = $field->id;
+        $this->reset(['irrigationDuration', 'irrigationVolume']);
+        $this->irrigatedOn = now()->toDateString();
+        $this->irrigationMethod = 'drip';
+    }
+
+    public function closeIrrigation(): void
+    {
+        $this->irrigatingFieldId = null;
+    }
+
+    public function saveIrrigation(): void
+    {
+        $data = $this->validate([
+            'irrigatedOn' => ['required', 'date'],
+            'irrigationMethod' => ['required', 'in:'.implode(',', IrrigationLog::METHODS)],
+            'irrigationDuration' => ['nullable', 'integer', 'min:0'],
+            'irrigationVolume' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $field = Field::findOrFail($this->irrigatingFieldId);
+        $this->authorize('recordIrrigation', $field);
+
+        $field->irrigationLogs()->create([
+            'irrigated_on' => $data['irrigatedOn'],
+            'method' => $data['irrigationMethod'],
+            'duration_minutes' => $data['irrigationDuration'] !== '' ? $data['irrigationDuration'] : null,
+            'volume_liters' => $data['irrigationVolume'] !== '' ? $data['irrigationVolume'] : null,
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->irrigatingFieldId = null;
     }
 
     public function startAddingSeason(): void
