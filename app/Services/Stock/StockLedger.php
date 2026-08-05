@@ -167,6 +167,11 @@ class StockLedger
      * The cost is the point: it is the only thing that lets the weighted
      * average mean anything, and a receipt without one is a quantity change
      * that leaves the valuation guessing.
+     *
+     * `$referenceType`/`$referenceId` name what caused the receipt — a
+     * `PurchaseOrder`, a `CropCycle` harvest — the same way `move()` already
+     * does for a sale. Optional because most receipts today (a plain delivery
+     * with no PO) have nothing to point at.
      */
     public function receive(
         Company $company,
@@ -177,12 +182,20 @@ class StockLedger
         ?User $actor = null,
         string $reason = 'purchase',
         ?string $occurredAt = null,
+        ?string $batchNumber = null,
+        ?string $expiresOn = null,
+        ?string $referenceType = null,
+        ?string $referenceId = null,
     ): StockMovement {
         return StockMovement::create([
             'company_id' => $company->id,
             'item_id' => $item->id,
             'stock_location_id' => $location?->id ?? $this->defaultLocationFor($company)?->id,
             'quantity' => round($quantity, 3),
+            'batch_number' => $batchNumber,
+            'expires_on' => $expiresOn,
+            'reference_type' => $referenceType,
+            'reference_id' => $referenceId,
             'unit_cost' => $unitCost !== null ? round($unitCost, 2) : null,
             'reason' => $reason,
             'user_id' => $actor?->id,

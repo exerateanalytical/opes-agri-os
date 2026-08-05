@@ -25,6 +25,7 @@ class StockMovement extends Model
         return [
             'quantity' => 'decimal:3',
             'occurred_at' => 'datetime',
+            'expires_on' => 'date',
         ];
     }
 

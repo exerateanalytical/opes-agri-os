@@ -47,10 +47,14 @@ class DeliveryReceiver
     public function __construct(protected StockLedger $stock) {}
 
     /**
-     * @param  array<int, array{item_id: string, quantity: float|string, unit_cost: float|string|null}>  $lines
+     * @param  array<int, array{item_id: string, quantity: float|string, unit_cost: float|string|null,
+     *               batch_number?: ?string, expires_on?: ?string}>  $lines
      * @param  array{received_on?: ?string, supplier_id?: ?string, reference?: ?string,
      *               location_id?: ?string, record_expense?: bool, vat_rate?: float,
-     *               payment_method?: ?string, due_date?: ?string}  $options
+     *               payment_method?: ?string, due_date?: ?string,
+     *               reference_type?: ?string, reference_id?: ?string}  $options
+     *               `reference_type`/`reference_id` name what caused this receipt (e.g. a PurchaseOrder) —
+     *               distinct from `reference`, which is a free-text string on the resulting Expense.
      * @return array{movements: int, value: float, expense: ?Expense}
      *
      * @throws RuntimeException when nothing usable was given
@@ -92,6 +96,8 @@ class DeliveryReceiver
                 'unit_cost' => ($line['unit_cost'] ?? null) === null || $line['unit_cost'] === ''
                     ? null
                     : round((float) $line['unit_cost'], 2),
+                'batch_number' => $line['batch_number'] ?? null,
+                'expires_on' => $line['expires_on'] ?? null,
             ];
         }
 
@@ -112,6 +118,10 @@ class DeliveryReceiver
                     actor: $actor,
                     reason: 'purchase',
                     occurredAt: $receivedOn,
+                    batchNumber: $line['batch_number'],
+                    expiresOn: $line['expires_on'],
+                    referenceType: $options['reference_type'] ?? null,
+                    referenceId: $options['reference_id'] ?? null,
                 );
 
                 $value += $line['quantity'] * (float) ($line['unit_cost'] ?? 0);
