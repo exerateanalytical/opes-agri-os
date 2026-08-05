@@ -7,8 +7,10 @@ use App\Domain\Sales\Http\Requests\UpdateItemRequest;
 use App\Domain\Sales\Http\Resources\ItemResource;
 use App\Http\Controllers\Api\V1\Controller;
 use App\Models\Item;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 class ItemController extends Controller
 {
@@ -33,7 +35,7 @@ class ItemController extends Controller
         return ItemResource::make($item);
     }
 
-    public function store(StoreItemRequest $request): \Illuminate\Http\JsonResponse
+    public function store(StoreItemRequest $request): JsonResponse
     {
         $item = Item::create($request->validated());
 
@@ -47,7 +49,7 @@ class ItemController extends Controller
         return ItemResource::make($item);
     }
 
-    public function destroy(Item $item): \Illuminate\Http\Response
+    public function destroy(Item $item): Response
     {
         $this->authorize('delete', $item);
 

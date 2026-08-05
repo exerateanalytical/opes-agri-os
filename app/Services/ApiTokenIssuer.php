@@ -24,7 +24,7 @@ class ApiTokenIssuer
 {
     /**
      * @param  array<int, string>  $abilities  Permission slugs (e.g. "sales.issue"),
-     *                                          or ["*"] for everything the user holds.
+     *                                         or ["*"] for everything the user holds.
      */
     public function issue(
         User $user,

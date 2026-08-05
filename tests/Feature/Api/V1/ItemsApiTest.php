@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api\V1;
 
+use App\Models\Category;
 use App\Models\Company;
 use App\Models\Item;
 use App\Models\Role;
@@ -101,7 +102,7 @@ class ItemsApiTest extends TestCase
             'currency' => 'USD',
         ]);
         app(CurrentCompany::class)->set($otherCompany);
-        $foreignCategory = \App\Models\Category::create(['name' => 'Theirs', 'slug' => 'theirs']);
+        $foreignCategory = Category::create(['name' => 'Theirs', 'slug' => 'theirs']);
 
         $this->api()->postJson('/api/v1/items', ['name' => 'Ours', 'category_id' => $foreignCategory->id])
             ->assertStatus(422)

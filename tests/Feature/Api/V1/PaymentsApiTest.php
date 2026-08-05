@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\V1;
 use App\Enums\DocumentType;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\Document;
 use App\Models\Payment;
 use App\Models\Role;
 use App\Models\User;
@@ -89,7 +90,7 @@ class PaymentsApiTest extends TestCase
             ->assertJsonPath('data.receipt.status', 'issued')
             ->assertJsonPath('data.receipt.verification_url', fn ($url) => is_string($url) && str_contains($url, '/v/'));
 
-        $this->assertSame('paid', \App\Models\Document::find($documentId)->status->value);
+        $this->assertSame('paid', Document::find($documentId)->status->value);
     }
 
     public function test_an_overpayment_is_rejected_as_a_conflict(): void

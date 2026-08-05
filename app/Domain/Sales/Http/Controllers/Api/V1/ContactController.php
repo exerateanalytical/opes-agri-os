@@ -7,8 +7,10 @@ use App\Domain\Sales\Http\Requests\UpdateContactRequest;
 use App\Domain\Sales\Http\Resources\ContactResource;
 use App\Http\Controllers\Api\V1\Controller;
 use App\Models\Contact;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 class ContactController extends Controller
 {
@@ -32,7 +34,7 @@ class ContactController extends Controller
         return ContactResource::make($contact);
     }
 
-    public function store(StoreContactRequest $request): \Illuminate\Http\JsonResponse
+    public function store(StoreContactRequest $request): JsonResponse
     {
         $contact = Contact::create($this->attributesFrom($request));
 
@@ -46,7 +48,7 @@ class ContactController extends Controller
         return ContactResource::make($contact);
     }
 
-    public function destroy(Contact $contact): \Illuminate\Http\Response
+    public function destroy(Contact $contact): Response
     {
         $this->authorize('delete', $contact);
 

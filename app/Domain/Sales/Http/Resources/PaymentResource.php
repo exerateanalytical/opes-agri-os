@@ -2,11 +2,12 @@
 
 namespace App\Domain\Sales\Http\Resources;
 
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Payment
+ * @mixin Payment
  */
 class PaymentResource extends JsonResource
 {

@@ -2,11 +2,12 @@
 
 namespace App\Domain\Sales\Http\Resources;
 
+use App\Models\DocumentLine;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\DocumentLine
+ * @mixin DocumentLine
  */
 class DocumentLineResource extends JsonResource
 {

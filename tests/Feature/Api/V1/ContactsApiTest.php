@@ -11,6 +11,7 @@ use App\Support\CurrentCompany;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class ContactsApiTest extends TestCase
@@ -44,7 +45,7 @@ class ContactsApiTest extends TestCase
             ->plainTextToken;
     }
 
-    protected function api(): \Illuminate\Testing\TestResponse|static
+    protected function api(): TestResponse|static
     {
         return $this->withHeader('Authorization', "Bearer {$this->token}");
     }
