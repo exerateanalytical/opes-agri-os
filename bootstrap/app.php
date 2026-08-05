@@ -21,6 +21,8 @@ use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Routing\Middleware\ThrottleRequestsWithRedis;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
+use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -68,6 +70,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin.role' => EnsurePlatformAdminRole::class,
             'api.company' => ResolveApiCompany::class,
+            // Laravel 11+ no longer auto-registers package middleware aliases
+            // the way the old HTTP Kernel did, so Sanctum's ability checks
+            // need registering here explicitly.
+            'abilities' => CheckAbilities::class,
+            'ability' => CheckForAnyAbility::class,
         ]);
 
         /*
