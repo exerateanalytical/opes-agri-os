@@ -95,6 +95,15 @@ runtime.
 **V2 — livestock.** Livestock + Poultry (animal registry, health/vaccination, breeding, production
 tracking). Separable from V1 — doesn't block or depend on the planting/harvest loop.
 
+**V2 M1 shipped:** animal registry (species/breed/tag/DOB/status, an optional link to `Farm` — a
+livestock-only business never has to switch Farms on), health & vaccination records, and production
+tracking. `Animal` is a standalone model, not a `FixedAsset` subtype — it breeds, gets sick and dies,
+none of which fits depreciation-schedule semantics (this was the roadmap's one open question for V2,
+now resolved). Production records write to the Stock ledger through the same `StockLedger::receive()`
+path a crop harvest uses (`App\Services\Livestock\ProductionRecorder`), when a product (milk, eggs,
+wool) is named — recording without one is allowed for animals that don't produce stocked output.
+Breeding/genealogy is not yet built — see below.
+
 **V3 — cooperative & finance.** Cooperative & Farmer Groups, Microfinance & Credit. A different domain
 shape entirely (membership, shares, loan ledgers, voting) — genuinely new ground, not an extension of
 existing Sales/Accounting patterns.
@@ -113,15 +122,22 @@ scope/roadmap decisions specific to the agri expansion.
 
 ## 6. Open questions
 
-None blocked V1 as shipped. Two valuation questions carried into V3, decided together rather than
-separately since they're the same underlying question (how does something arrive on the books at zero
-cash cost):
+None blocked V1 or V2 M1 as shipped. Resolved: how animal records interact with the existing Asset
+Management domain — `Animal` is its own model (§4, V2 M1), not a `FixedAsset` subtype.
 
-- How animal records interact with the existing Asset Management domain (an animal is not quite "stock"
-  and not quite a "fixed asset" — needs its own model, flagged here so V2 doesn't retrofit it onto the
-  wrong one).
-- Harvest value recognition: a `CropCycle` harvest and a received `PurchaseOrder` both write stock
-  movements today with no accounting posting — a harvest owes nothing to anyone, which the existing
-  `RecordsBusinessEvents`/Ledger pattern has no event for yet. Debiting stock at cost and crediting a
-  production account is deferred past V1 by design (see M3/M4 commit messages), to be decided alongside
-  the animal-as-asset question once V3's real payables/receivables ledger work is underway.
+Two valuation questions carried into V3, decided together rather than separately since they're the same
+underlying question (how does something arrive on the books at zero cash cost):
+
+- Harvest and livestock-production value recognition: a `CropCycle` harvest, a received `PurchaseOrder`,
+  and an `Animal`'s production record all write stock movements today with no accounting posting — none
+  of them owes anything to anyone, which the existing `RecordsBusinessEvents`/Ledger pattern has no event
+  for yet. Debiting stock at cost and crediting a production account is deferred past V1/V2 by design (see
+  the M3/M4/V2-M1 commit messages), to be decided once V3's real payables/receivables ledger work is
+  underway.
+- Whether an animal's `acquisition_cost` should ever flow into the accounting ledger (e.g. as a capital
+  purchase) the way a `FixedAsset`'s does — deferred alongside the point above, since it's the same
+  "something has a cost basis with nowhere to post it yet" shape.
+
+Not yet decided, flagged for V2's next milestone: breeding/genealogy (parent/offspring links) and
+poultry-specific batch tracking (a flock is usually recorded as a count, not individual animals) were
+both explicitly left out of V2 M1's registry-plus-health-plus-production scope.

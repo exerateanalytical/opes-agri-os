@@ -4,6 +4,7 @@ namespace Tests\Feature\Api\V1;
 
 use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
+use App\Models\Animal;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\CropCycle;
@@ -71,6 +72,8 @@ class AbilityEnforcementTest extends TestCase
 
     protected PurchaseOrder $purchaseOrder;
 
+    protected Animal $animal;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -137,6 +140,8 @@ class AbilityEnforcementTest extends TestCase
             'status' => 'issued', 'number' => 'PO-TEST-1', 'order_date' => now()->toDateString(),
         ]);
         $this->purchaseOrder->lines()->create(['item_id' => $this->item->id, 'quantity' => 10, 'unit_cost' => 5]);
+
+        $this->animal = Animal::create(['species' => 'Cattle', 'status' => 'active']);
     }
 
     /** @return array<int, array{method: string, uri: string}> */
@@ -189,6 +194,13 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'PATCH', 'uri' => "/api/v1/purchase-orders/{$this->purchaseOrder->id}"],
             ['method' => 'POST', 'uri' => "/api/v1/purchase-orders/{$this->purchaseOrder->id}/issue"],
             ['method' => 'POST', 'uri' => "/api/v1/purchase-orders/{$this->purchaseOrder->id}/receive"],
+            ['method' => 'GET', 'uri' => '/api/v1/animals'],
+            ['method' => 'POST', 'uri' => '/api/v1/animals'],
+            ['method' => 'GET', 'uri' => "/api/v1/animals/{$this->animal->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/animals/{$this->animal->id}"],
+            ['method' => 'DELETE', 'uri' => "/api/v1/animals/{$this->animal->id}"],
+            ['method' => 'POST', 'uri' => "/api/v1/animals/{$this->animal->id}/health-records"],
+            ['method' => 'POST', 'uri' => "/api/v1/animals/{$this->animal->id}/production-records"],
         ];
     }
 

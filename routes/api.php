@@ -5,6 +5,7 @@ use App\Domain\Agri\Http\Controllers\Api\V1\FarmController;
 use App\Domain\Agri\Http\Controllers\Api\V1\FieldController;
 use App\Domain\Agri\Http\Controllers\Api\V1\PurchaseOrderController;
 use App\Domain\Agri\Http\Controllers\Api\V1\SeasonController;
+use App\Domain\Livestock\Http\Controllers\Api\V1\AnimalController;
 use App\Domain\Sales\Http\Controllers\Api\V1\ContactController;
 use App\Domain\Sales\Http\Controllers\Api\V1\DocumentController;
 use App\Domain\Sales\Http\Controllers\Api\V1\DocumentLifecycleController;
@@ -127,4 +128,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:procurement.issue')->name('api.v1.purchase-orders.issue');
     Route::post('/purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])
         ->middleware('abilities:procurement.receive')->name('api.v1.purchase-orders.receive');
+
+    Route::middleware('abilities:livestock.view')->group(function () {
+        Route::get('/animals', [AnimalController::class, 'index'])->name('api.v1.animals.index');
+        Route::get('/animals/{animal}', [AnimalController::class, 'show'])->name('api.v1.animals.show');
+    });
+    Route::post('/animals', [AnimalController::class, 'store'])
+        ->middleware('abilities:livestock.create')->name('api.v1.animals.store');
+    Route::patch('/animals/{animal}', [AnimalController::class, 'update'])
+        ->middleware('abilities:livestock.update')->name('api.v1.animals.update');
+    Route::delete('/animals/{animal}', [AnimalController::class, 'destroy'])
+        ->middleware('abilities:livestock.delete')->name('api.v1.animals.destroy');
+    Route::post('/animals/{animal}/health-records', [AnimalController::class, 'recordHealth'])
+        ->middleware('abilities:livestock.record-health')->name('api.v1.animals.health-records.store');
+    Route::post('/animals/{animal}/production-records', [AnimalController::class, 'recordProduction'])
+        ->middleware('abilities:livestock.record-production')->name('api.v1.animals.production-records.store');
 });

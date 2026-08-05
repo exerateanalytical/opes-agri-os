@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Animal;
 use App\Models\BankAccount;
 use App\Models\BusinessDocument;
 use App\Models\Contact;
@@ -245,6 +246,17 @@ return [
         // and that is core, not a switchable module.
         'groups' => ['procurement'],
         'models' => [PurchaseOrder::class],
+    ],
+
+    'livestock' => [
+        'label' => 'Livestock',
+        'description' => 'Animal records, health and vaccinations, and what they produce.',
+        'icon' => 'briefcase',
+        'default' => true,
+        // No 'requires': a livestock-only business has no reason to switch
+        // Farms on first — an animal's farm_id is optional.
+        'groups' => ['livestock'],
+        'models' => [Animal::class],
     ],
 
     /*

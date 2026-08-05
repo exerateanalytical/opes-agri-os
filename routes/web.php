@@ -41,6 +41,7 @@ use App\Livewire\Forms\Builder as FormsBuilder;
 use App\Livewire\Forms\Index as FormsIndex;
 use App\Livewire\Forms\Responses as FormsResponses;
 use App\Livewire\Invitations\Accept as InvitationAccept;
+use App\Livewire\Livestock\Index as LivestockIndex;
 use App\Livewire\Onboarding\Register;
 use App\Livewire\Papers\Compose as PapersCompose;
 use App\Livewire\Papers\Index as PapersIndex;
@@ -240,6 +241,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/farms', FarmsIndex::class)->middleware('can:farms.view')->name('farms');
     Route::get('/crops', CropsIndex::class)->middleware('can:crops.view')->name('crops');
     Route::get('/procurement', ProcurementIndex::class)->middleware('can:procurement.view')->name('procurement');
+    Route::get('/livestock', LivestockIndex::class)->middleware('can:livestock.view')->name('livestock');
     Route::get('/banking', BankingIndex::class)->middleware('can:banking.view')->name('banking');
 
     /*
