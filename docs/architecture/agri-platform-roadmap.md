@@ -238,29 +238,59 @@ piece actually needs, not by the order §3 lists them in:
   to gate (page-level, like Reports), so there is nothing for a disabled source module to make
   unreachable.
 
-  Permissions are a new `Analytics` group with a single `analytics.view` ability — deliberately not
+  Permissions are a new `Analytics` group with `analytics.view` and `analytics.export` — deliberately not
   folded into `Reports`, and deliberately not per-source-module (`crops.view` etc.): this dashboard reads
   across modules a role might not otherwise have `view` on individually (a Sales Officer has no
-  `farms.view`, `livestock.view` or `grants.view`, but does get `Analytics => ['view']`, same roster
-  as `Reports`), so gating it behind six other permissions would just mean most roles see nothing on the
-  page they were granted access to. No `create`/`update`/`delete`/`export` actions exist in the group —
-  the dashboard writes nothing and CSV export was deliberately left out of this milestone (see below).
+  `farms.view`, `livestock.view` or `grants.view`, but does get `Analytics => ['view']`), so gating it
+  behind six other permissions would just mean most roles see nothing on the page they were granted
+  access to. `export` joined the group in the follow-up milestone below, the same view/export split
+  `Reports` already used — most roles that had `Analytics => ['view']` picked up `export` alongside it;
+  the Sales Officer role kept `view` only, mirroring its `Reports => ['view']`-without-export choice, since
+  reading the operations picture and walking out with it as a file are still different rights. No
+  `create`/`update`/`delete` actions exist in the group — the dashboard still writes nothing.
 
   API-first as usual: `GET /api/v1/analytics/dashboard` behind `abilities:analytics.view`, returning the
-  whole aggregation in one call rather than one endpoint per section — there is no per-section drill-down
-  page to link into yet, so splitting the response into six round trips would add latency without adding
-  a consumer that needs it. Livewire UI is `App\Livewire\Analytics\Dashboard`, one screen, reusing the
-  existing `x-ui.panel`/`x-ui.bar-chart` components Reports already established rather than introducing a
-  charting dependency.
+  whole aggregation in one call rather than one endpoint per section. Livewire UI is
+  `App\Livewire\Analytics\Dashboard`, one screen, reusing the existing `x-ui.panel`/`x-ui.bar-chart`
+  components Reports already established rather than introducing a charting dependency.
 
-  Deliberately **not** built this milestone: CSV/PDF export (Reports has `reports.export` for the
-  Sales-specific case; a cross-module export is a different, larger surface — deciding its shape once a
-  real consumer asks for it, not speculatively now), a custom date-range picker (the fixed six-month trend
-  window above is the only period control), drill-down from a dashboard number into the underlying
-  records (each section is a summary card, not a filtered list view — the source module's own screen is
-  where a business goes to see the records behind a number), and per-farm/per-field or per-member
-  breakdowns (every figure here is company-wide; slicing by farm or member is a real next step but not
-  one anything shipped so far has asked for). This closes V4 — every phase in §4 has now shipped.
+  **Follow-up milestone: the four scope cuts above, built.** `AnalyticsSummaryService`'s `summary()` and
+  every section method now take optional `from`/`to` (`CarbonImmutable`) plus `groupBy` params — omitted,
+  every method still returns exactly what it always did (the fixed six-month trend window, all-time
+  company totals), so the original default is the same default. Passed, the trend row re-buckets over the
+  custom range, and crops/livestock/procurement/assets/cooperative each filter their underlying query to
+  it (grant *project* totals stay cumulative to-date — a project's committed/received/spent figures don't
+  have a meaningful "in this date range" slice at the project level, only its transactions do). The API
+  takes `?from=&to=` as validated query params (`date`, `after_or_equal:from`) on
+  `GET /api/v1/analytics/dashboard`; a single bound with no partner is treated as "no range given" rather
+  than building a silently open-ended query. The Livewire `Dashboard` exposes the same as `#[Url]`-backed
+  date inputs, following the `type="date"` + `wire:model.live` convention Assets/Reports already use, with
+  a "reset to default (6mo)" action.
+
+  Breakdown: `crops_group_by=farm` groups the crop section by `Farm` (via `Field belongsTo Farm`), adding
+  a `by_farm` array of per-farm cycle counts and planned/actual yield alongside the unchanged company
+  totals. `cooperative_group_by=member` does the same for loans and contributions, grouped by
+  `CooperativeMember`, added as `by_member`. Both are additive — the plain totals a caller already parses
+  are still there — and both default to off, so `summary()` with no groupBy args is unchanged output.
+
+  Drill-down is a "View details" toggle per card (`Dashboard::toggleDrilldown()`), expanding into the
+  underlying records for that section scoped to the active date range — `CropCycle`, `AnimalProductionRecord`,
+  `PurchaseOrder`, `AssetMaintenanceRecord`, `Loan`, `GrantTransaction`. Built as a minimal inline list in
+  `Dashboard` itself rather than linking out to each module's own list view: none of Crops/Cooperative/etc.
+  `Index` accepts an arbitrary date range today, and Analytics reads company-wide across fields (member
+  name via `Loan->member->contact`, farm via `CropCycle->field->farm`) those screens don't surface either,
+  so reusing them would mean extending four unrelated components' filter surfaces for one caller. Capped
+  at 200 rows — a drill-down is a "what's behind this number" glance, not a paginated export.
+
+  Export is CSV, one combined file covering every enabled section (plus the `by_farm`/`by_member`
+  breakdown rows when a groupBy is active) rather than PDF or one file per section — following the
+  `Reports::exportCsv()` `streamDownload()`/`fputcsv` pattern exactly, no new dependency. It respects
+  whatever date-range and breakdown filters are currently on screen. **CSV only, no PDF** — a plain
+  remaining scope cut stated here rather than a regression: nothing shipped so far has asked for a
+  formatted PDF of this data, and CSV is what every other export surface in the platform (`Reports`) already
+  standardised on.
+
+  This closes V4 — every phase in §4 has now shipped, including the four cuts Phase 5 originally deferred.
 
 **Five inventory items are already usable today and were deliberately NOT rebuilt as separate modules,**
 because doing so would duplicate schema that already exists:

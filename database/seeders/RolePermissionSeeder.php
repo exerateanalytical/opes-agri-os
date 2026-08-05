@@ -68,7 +68,7 @@ class RolePermissionSeeder extends Seeder
             // with the accountant, below, same split as loans.
             'Partner Crm' => ['view', 'create', 'update', 'record-interaction'],
             'Grants' => ['view', 'create', 'update'],
-            'Analytics' => ['view'],
+            'Analytics' => ['view', 'export'],
         ]],
         'accountant' => ['name' => 'Accountant', 'level' => 4, 'grants' => [
             'Business' => ['view'],
@@ -115,7 +115,7 @@ class RolePermissionSeeder extends Seeder
             // as loan disbursement/repayment above.
             'Partner Crm' => ['view'],
             'Grants' => ['view', 'record-transaction'],
-            'Analytics' => ['view'],
+            'Analytics' => ['view', 'export'],
         ]],
         'sales-officer' => ['name' => 'Sales Officer', 'level' => 5, 'grants' => [
             'Business' => ['view'],
@@ -130,6 +130,8 @@ class RolePermissionSeeder extends Seeder
             'Loyalty' => ['view', 'redeem'],
             'Reports' => ['view'],
             'Partners' => ['view', 'issue'],
+            // View-only, same split as Reports above: a Sales Officer reads
+            // the operations picture but doesn't walk out with the file.
             'Analytics' => ['view'],
         ]],
         // No Papers for a Cashier: a till operator has no reason to read the
@@ -174,7 +176,7 @@ class RolePermissionSeeder extends Seeder
             'Utilities' => ['view'],
             'Partner Crm' => ['view'],
             'Grants' => ['view'],
-            'Analytics' => ['view'],
+            'Analytics' => ['view', 'export'],
         ]],
     ];
 
