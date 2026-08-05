@@ -24,6 +24,7 @@ class CooperativeMember extends Model
         return [
             'joined_on' => 'date',
             'balance' => 'decimal:2',
+            'vote_weight' => 'decimal:2',
         ];
     }
 

@@ -25,6 +25,7 @@ class StoreVoteRequest extends FormRequest
             ],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'weighted' => ['nullable', 'boolean'],
             'opened_on' => ['nullable', 'date'],
         ];
     }

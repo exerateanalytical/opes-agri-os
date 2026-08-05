@@ -20,6 +20,7 @@ class AnimalBatchResource extends JsonResource
             'breed' => $this->breed,
             'initial_count' => $this->initial_count,
             'current_count' => $this->current_count,
+            'unit_cost' => $this->unit_cost,
             'acquired_on' => $this->acquired_on?->toDateString(),
             'status' => $this->status,
             'notes' => $this->notes,

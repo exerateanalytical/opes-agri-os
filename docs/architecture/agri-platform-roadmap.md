@@ -299,15 +299,18 @@ Management domain — `Animal` is its own model (§4, V2 M1), not a `FixedAsset`
 Two valuation questions carried into V3, decided together rather than separately since they're the same
 underlying question (how does something arrive on the books at zero cash cost):
 
-- Harvest and livestock-production value recognition: a `CropCycle` harvest, a received `PurchaseOrder`,
-  and an `Animal`'s production record all write stock movements today with no accounting posting — none
-  of them owes anything to anyone, which the existing `RecordsBusinessEvents`/Ledger pattern has no event
-  for yet. Debiting stock at cost and crediting a production account is deferred past V1/V2 by design (see
-  the M3/M4/V2-M1 commit messages), to be decided once V3's real payables/receivables ledger work is
-  underway.
+- **Resolved (V4 follow-up):** Harvest and livestock-production value recognition. `HarvestRecorder` and
+  `App\Services\Livestock\ProductionRecorder` now post to the accounting ledger through the new
+  `RecordsBusinessEvents::recordStockValuation()` whenever a caller supplies a unit cost — debiting `stock`
+  (31, the same account a purchase or a sale already moves) and crediting the new `production_stored` role
+  (736, *Variation des stocks de biens produits* — the plan's own line for production the business grew
+  itself becoming stock, not a sale to a customer). A harvest or production record recorded with no known
+  cost stays exactly as before: unposted, because there is nothing to value it at. This did not need V3's
+  payables/receivables work first — the entry the plan actually calls for (736, not a revenue account)
+  turned out not to depend on it.
 - Whether an animal's `acquisition_cost` should ever flow into the accounting ledger (e.g. as a capital
-  purchase) the way a `FixedAsset`'s does — deferred alongside the point above, since it's the same
-  "something has a cost basis with nowhere to post it yet" shape.
+  purchase) the way a `FixedAsset`'s does — still open. A different question from the one above: this is
+  about capitalising the animal itself at purchase, not valuing what it later produces.
 
 **V2 M2 shipped:** breeding/genealogy (`sire_id`/`dam_id` self-referencing links on `Animal`, validated
 against sex) and poultry-style batch tracking (`AnimalBatch` — a flock recorded as a running count via
@@ -317,7 +320,30 @@ and a counted flock have almost no shared lifecycle (one gets tagged, health rec
 the other gets a running total adjusted up or down), so forcing them into one table would mean most
 columns are null for one side or the other.
 
-Not yet decided, flagged for a future V2 milestone: no accounting posting for a batch's mortality/loss
-(same shape as the harvest-valuation question above); no per-adjustment audit trail for batch counts,
-just the running total (promote to a ledger-style table if a business needs to reconstruct *when* losses
-happened, not just how many); no species-specific vaccination schedules or reminders.
+**Resolved (V4 follow-up):** a batch's mortality/loss now posts to the accounting ledger, and every
+adjustment — not just the running total — leaves its own audit-trail row. `AnimalBatch` gained a nullable
+`unit_cost` (what one head in the batch is carried at); `BatchCountAdjuster` writes an
+`AnimalBatchAdjustment` row for every call (positive or negative — hatching and purchases get a trail
+too, not only losses) recording the change, the resulting count, and an optional reason, addressing "no
+per-adjustment audit trail for batch counts, just the running total" directly — `current_count` on
+`AnimalBatch` stays the fast-read figure, `GET /api/v1/animal-batches/{id}/adjustments` is where a
+business reconstructs *when* and *why* it moved. A negative adjustment with a known `unit_cost` also posts
+through `RecordsBusinessEvents::recordBatchLoss()`: the loss debits the new `livestock_loss` role (818)
+and credits `stock` (31) — a counted flock is stock the business holds, so a fall in the count is a fall in
+that same account, the harvest/production valuation above credits into. A batch with no `unit_cost` set
+adjusts exactly as before, unposted. Still open: species-specific vaccination schedules or reminders —
+untouched by this pass.
+
+Cooperative governance (V3 M3) also carried two deliberately-out items, both **resolved in this V4
+follow-up**:
+
+- **Weighted voting.** `CooperativeMember.vote_weight` (default 1) is a bylaws-set number a business edits
+  per member; `CooperativeVote.weighted` decides per-resolution whether `CooperativeVote::tally()` reads
+  member weight or a plain headcount. A cooperative can run ordinary one-member-one-vote for most business
+  and switch a specific capital resolution to weighted without every vote being forced the same way — the
+  flag lives on the vote, not on the cooperative.
+- **Quorum as a hard gate.** `CooperativeVoteController::store()` now refuses to open a vote tied to a
+  meeting whose `status` is `held` and whose `quorum_required` the attendance count did not reach — the
+  gate V3 M3 explicitly left informational. A meeting still only `scheduled` (attendance isn't in yet) is
+  not held to quorum, and a vote raised with no meeting at all — `CooperativeMeeting::quorumMet()` has
+  nothing to check in that case — is unaffected, exactly as before.

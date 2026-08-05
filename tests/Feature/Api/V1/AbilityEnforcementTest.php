@@ -274,6 +274,7 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'GET', 'uri' => '/api/v1/animal-batches'],
             ['method' => 'POST', 'uri' => '/api/v1/animal-batches'],
             ['method' => 'GET', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}"],
+            ['method' => 'GET', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}/adjustments"],
             ['method' => 'PATCH', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}"],
             ['method' => 'DELETE', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}"],
             ['method' => 'POST', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}/adjust-count"],

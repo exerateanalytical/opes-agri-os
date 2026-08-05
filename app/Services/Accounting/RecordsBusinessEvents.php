@@ -12,6 +12,7 @@ use App\Models\LoanRepayment;
 use App\Models\Payment;
 use App\Models\User;
 use App\Support\Accounting\ChartOfAccounts;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -367,6 +368,90 @@ class RecordsBusinessEvents
             ],
             source: $transaction,
             narration: 'Dépense projet — '.($transaction->project?->name ?? ''),
+            actor: $actor,
+        );
+    }
+
+    /**
+     * A crop harvest or an animal's production record arriving with a known
+     * cost, valued onto the books. Neither owes anything to anyone — no
+     * customer, no supplier — so this is not a sale or a purchase: stock
+     * (31) rises at cost and the mirror side is production the business
+     * grew itself (736), the SYSCOHADA "production stockée" line, not
+     * ordinary sales income. Resolves the harvest/livestock-production
+     * valuation question the roadmap carried from V1/V2 into V3 — see
+     * docs/architecture/agri-platform-roadmap.md §6.
+     *
+     * Callers only reach this when a unit cost was actually given: a harvest
+     * or production record with no known cost stays unposted exactly as
+     * before, the same "nothing to post" behaviour HarvestRecorder and
+     * ProductionRecorder already had.
+     */
+    public function recordStockValuation(Model $source, Company $company, float $amount, string $narration, ?string $entryDate = null, ?User $actor = null): ?JournalEntry
+    {
+        if (! $this->chartIsReady($company)) {
+            return null;
+        }
+
+        $amount = round($amount, 2);
+
+        if ($amount <= 0) {
+            return null;
+        }
+
+        return $this->ledger->post(
+            company: $company,
+            journal: 'OD',
+            entryDate: $entryDate ?? now()->toDateString(),
+            lines: [
+                ['account' => 'stock', 'debit' => $amount],
+                ['account' => 'production_stored', 'credit' => $amount],
+            ],
+            source: $source,
+            narration: $narration,
+            actor: $actor,
+        );
+    }
+
+    /**
+     * A livestock batch's mortality or other count loss (culling, non-sale
+     * shrinkage), valued at the batch's average acquisition cost. No cash
+     * moves and nothing is owed, so this is a straight write-down: the loss
+     * (818) is a charge, and the credit side reduces the same stock account
+     * (31) a batch's own acquisition and a crop's harvest both carry their
+     * value in — a counted flock is stock the business holds, the same
+     * "marchandises" bucket, so a loss in the count is a fall in that stock,
+     * not a different account. Resolves the "no accounting posting for a
+     * batch's mortality/loss" question flagged after V2 M2 — see
+     * docs/architecture/agri-platform-roadmap.md §6.
+     *
+     * Only posts when a per-head cost is known and the loss has value;
+     * a batch adjustment with no known cost, or a positive adjustment
+     * (hatching, purchase), stays unposted exactly as batch adjustments
+     * always have.
+     */
+    public function recordBatchLoss(Model $source, Company $company, float $amount, string $narration, ?string $entryDate = null, ?User $actor = null): ?JournalEntry
+    {
+        if (! $this->chartIsReady($company)) {
+            return null;
+        }
+
+        $amount = round($amount, 2);
+
+        if ($amount <= 0) {
+            return null;
+        }
+
+        return $this->ledger->post(
+            company: $company,
+            journal: 'OD',
+            entryDate: $entryDate ?? now()->toDateString(),
+            lines: [
+                ['account' => 'livestock_loss', 'debit' => $amount],
+                ['account' => 'stock', 'credit' => $amount],
+            ],
+            source: $source,
+            narration: $narration,
             actor: $actor,
         );
     }

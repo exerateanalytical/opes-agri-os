@@ -5,6 +5,7 @@ namespace App\Domain\Livestock\Http\Controllers\Api\V1;
 use App\Domain\Livestock\Http\Requests\AdjustAnimalBatchCountRequest;
 use App\Domain\Livestock\Http\Requests\StoreAnimalBatchRequest;
 use App\Domain\Livestock\Http\Requests\UpdateAnimalBatchRequest;
+use App\Domain\Livestock\Http\Resources\AnimalBatchAdjustmentResource;
 use App\Domain\Livestock\Http\Resources\AnimalBatchResource;
 use App\Http\Controllers\Api\V1\Controller;
 use App\Models\AnimalBatch;
@@ -66,8 +67,23 @@ class AnimalBatchController extends Controller
 
     public function adjustCount(AdjustAnimalBatchCountRequest $request, AnimalBatch $animalBatch, BatchCountAdjuster $adjuster): AnimalBatchResource
     {
-        $adjusted = $adjuster->adjust($animalBatch, (int) $request->validated('change'));
+        $adjusted = $adjuster->adjust(
+            $animalBatch,
+            (int) $request->validated('change'),
+            $request->user(),
+            $request->validated('reason'),
+        );
 
         return AnimalBatchResource::make($adjusted);
+    }
+
+    /** The audit trail behind a batch's running count. */
+    public function adjustments(AnimalBatch $animalBatch): AnonymousResourceCollection
+    {
+        $this->authorize('view', $animalBatch);
+
+        $adjustments = $animalBatch->adjustments()->orderByDesc('id')->get();
+
+        return AnimalBatchAdjustmentResource::collection($adjustments);
     }
 }

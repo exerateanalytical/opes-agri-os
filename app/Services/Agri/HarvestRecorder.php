@@ -4,6 +4,7 @@ namespace App\Services\Agri;
 
 use App\Models\CropCycle;
 use App\Models\User;
+use App\Services\Accounting\RecordsBusinessEvents;
 use App\Services\Stock\StockLedger;
 use App\Support\CurrentCompany;
 use Illuminate\Support\Facades\DB;
@@ -14,15 +15,15 @@ use RuntimeException;
  * `StockLedger::receive()` every other delivery goes through — a harvest is
  * inventory arriving, no different from a purchase, except at zero cash cost.
  *
- * Deliberately does not post to the accounting ledger: a harvest owes
- * nothing to anyone, which the existing RecordsBusinessEvents/Ledger pattern
- * has no event for yet. Recognising the harvest's value on the books is an
- * open question deferred past V1 — see
- * docs/architecture/agri-platform-roadmap.md.
+ * Posts to the accounting ledger when a unit cost is given, resolving the
+ * harvest-valuation question the roadmap carried from V1 into V3 — see
+ * `RecordsBusinessEvents::recordStockValuation()` and
+ * docs/architecture/agri-platform-roadmap.md. A harvest with no known cost
+ * stays unposted exactly as before: there is nothing to value it at.
  */
 class HarvestRecorder
 {
-    public function __construct(protected StockLedger $stock) {}
+    public function __construct(protected StockLedger $stock, protected RecordsBusinessEvents $events) {}
 
     /**
      * @param  array{batch_number?: ?string, expires_on?: ?string}  $options
@@ -65,6 +66,17 @@ class HarvestRecorder
                 'actual_harvest_date' => now()->toDateString(),
                 'status' => 'harvested',
             ])->save();
+
+            if ($unitCost !== null && $unitCost > 0) {
+                $this->events->recordQuietly(fn () => $this->events->recordStockValuation(
+                    source: $cycle,
+                    company: $company,
+                    amount: $quantity * $unitCost,
+                    narration: 'Récolte — '.($cycle->item->name ?? ''),
+                    entryDate: $cycle->actual_harvest_date?->toDateString(),
+                    actor: $actor,
+                ));
+            }
 
             return $cycle;
         });

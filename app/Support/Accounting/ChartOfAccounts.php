@@ -140,6 +140,31 @@ class ChartOfAccounts
          */
         'grant_income' => ['741', 'Subventions d\'exploitation'],
         'project_expenses' => ['658', 'Charges diverses'],
+
+        /*
+         * Harvest and livestock-production valuation (V4 follow-up,
+         * resolving the roadmap's open question). A crop harvest, a received
+         * purchase order and an animal's production record all arrive with
+         * no cash owed to anyone — so the entry is not a sale, it is
+         * production the business grew itself becoming stock. 736 is the
+         * plan's own account for exactly that: "Variation de stocks de
+         * produits" — production stockée. Debiting 31 (Marchandises, the
+         * same stock account a purchase or a sale already moves) at cost and
+         * crediting 736 records the value without inventing a receivable or
+         * a customer.
+         */
+        'production_stored' => ['736', 'Variation des stocks de biens produits'],
+
+        /*
+         * A livestock batch's mortality or other loss (V2 M2 follow-up).
+         * Nothing is owed to anyone and no cash moves — the flock is simply
+         * worth less than it was — so this is a charge, not a payable. 818
+         * is the plan's "Valeurs comptables des cessions d'immobilisations"
+         * neighbour for an ordinary-activity loss with no better-fitting
+         * class-6 line; used here for a batch write-down the way 658 is used
+         * for a grant project's uncategorised spend.
+         */
+        'livestock_loss' => ['818', 'Charges HAO'],
     ];
 
     /**

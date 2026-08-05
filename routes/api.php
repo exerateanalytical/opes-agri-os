@@ -165,6 +165,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
     Route::middleware('abilities:livestock.view')->group(function () {
         Route::get('/animal-batches', [AnimalBatchController::class, 'index'])->name('api.v1.animal-batches.index');
         Route::get('/animal-batches/{animalBatch}', [AnimalBatchController::class, 'show'])->name('api.v1.animal-batches.show');
+        Route::get('/animal-batches/{animalBatch}/adjustments', [AnimalBatchController::class, 'adjustments'])->name('api.v1.animal-batches.adjustments');
     });
     Route::post('/animal-batches', [AnimalBatchController::class, 'store'])
         ->middleware('abilities:livestock.create')->name('api.v1.animal-batches.store');

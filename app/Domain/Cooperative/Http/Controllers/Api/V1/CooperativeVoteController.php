@@ -6,6 +6,7 @@ use App\Domain\Cooperative\Http\Requests\CastVoteRequest;
 use App\Domain\Cooperative\Http\Requests\StoreVoteRequest;
 use App\Domain\Cooperative\Http\Resources\CooperativeVoteResource;
 use App\Http\Controllers\Api\V1\Controller;
+use App\Models\CooperativeMeeting;
 use App\Models\CooperativeVote;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,9 +37,30 @@ class CooperativeVoteController extends Controller
 
     public function store(StoreVoteRequest $request): JsonResponse
     {
+        $meetingId = $request->validated('cooperative_meeting_id');
+
+        /*
+         * Quorum as a hard gate rather than the informational flag V3 M3
+         * shipped with: a vote tied to a meeting that has already been held
+         * without hitting its own `quorum_required` cannot open, because a
+         * meeting that never had enough attendees to decide anything is not
+         * a body a resolution can be raised in front of. A meeting that is
+         * still only `scheduled` has not happened yet — attendance isn't in
+         * yet either — so it is not held to quorum here; a vote raised with
+         * no meeting at all is unaffected, exactly as before.
+         */
+        if ($meetingId !== null) {
+            $meeting = CooperativeMeeting::findOrFail($meetingId);
+
+            if ($meeting->status === 'held' && ! $meeting->quorumMet()) {
+                throw new RuntimeException('This meeting did not reach quorum, so no vote can be opened against it.');
+            }
+        }
+
         $vote = CooperativeVote::create($request->validated() + [
             'opened_on' => $request->validated('opened_on') ?? now()->toDateString(),
             'status' => 'open',
+            'weighted' => $request->boolean('weighted'),
             'created_by' => $request->user()->id,
         ]);
 

@@ -39,18 +39,41 @@ class CooperativeVote extends Model
         return $this->hasMany(VoteBallot::class);
     }
 
-    /** @return array{for: int, against: int, abstain: int, total: int} */
+    /**
+     * A plain headcount by default — one ballot, one vote, same as before
+     * this column existed. When `weighted` is set, each ballot counts for
+     * its member's `vote_weight` instead of 1, the share/patronage-weighted
+     * reading a cooperative's bylaws can call for on a given resolution.
+     *
+     * @return array{for: float|int, against: float|int, abstain: float|int, total: float|int}
+     */
     public function tally(): array
     {
+        if (! $this->weighted) {
+            $counts = $this->ballots()
+                ->selectRaw('choice, count(*) as total')
+                ->groupBy('choice')
+                ->pluck('total', 'choice');
+
+            $result = [
+                'for' => (int) ($counts['for'] ?? 0),
+                'against' => (int) ($counts['against'] ?? 0),
+                'abstain' => (int) ($counts['abstain'] ?? 0),
+            ];
+
+            return $result + ['total' => array_sum($result)];
+        }
+
         $counts = $this->ballots()
-            ->selectRaw('choice, count(*) as total')
+            ->join('cooperative_members', 'cooperative_members.id', '=', 'vote_ballots.cooperative_member_id')
+            ->selectRaw('choice, sum(cooperative_members.vote_weight) as total')
             ->groupBy('choice')
             ->pluck('total', 'choice');
 
         $result = [
-            'for' => (int) ($counts['for'] ?? 0),
-            'against' => (int) ($counts['against'] ?? 0),
-            'abstain' => (int) ($counts['abstain'] ?? 0),
+            'for' => (float) ($counts['for'] ?? 0),
+            'against' => (float) ($counts['against'] ?? 0),
+            'abstain' => (float) ($counts['abstain'] ?? 0),
         ];
 
         return $result + ['total' => array_sum($result)];

@@ -23,6 +23,7 @@ class UpdateAnimalBatchRequest extends FormRequest
             'species' => ['sometimes', 'string', 'max:100'],
             'breed' => ['nullable', 'string', 'max:100'],
             'status' => ['sometimes', Rule::in(AnimalBatch::STATUSES)],
+            'unit_cost' => ['nullable', 'numeric', 'min:0'],
             'acquired_on' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
         ];

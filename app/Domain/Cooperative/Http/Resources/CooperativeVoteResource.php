@@ -19,6 +19,7 @@ class CooperativeVoteResource extends JsonResource
             'title' => $this->title,
             'description' => $this->description,
             'status' => $this->status,
+            'weighted' => $this->weighted,
             'opened_on' => $this->opened_on?->toDateString(),
             'closed_on' => $this->closed_on?->toDateString(),
             'tally' => $this->tally(),

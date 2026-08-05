@@ -26,6 +26,7 @@ class UpdateCooperativeMemberRequest extends FormRequest
             ],
             'joined_on' => ['nullable', 'date'],
             'status' => ['sometimes', Rule::in(CooperativeMember::STATUSES)],
+            'vote_weight' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
         ];
     }

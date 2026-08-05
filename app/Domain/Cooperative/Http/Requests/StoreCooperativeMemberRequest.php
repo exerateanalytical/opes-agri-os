@@ -29,6 +29,7 @@ class StoreCooperativeMemberRequest extends FormRequest
                 Rule::unique('cooperative_members', 'membership_number')->where('company_id', $companyId),
             ],
             'joined_on' => ['nullable', 'date'],
+            'vote_weight' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
         ];
     }

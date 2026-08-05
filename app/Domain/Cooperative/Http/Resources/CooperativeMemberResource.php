@@ -20,6 +20,7 @@ class CooperativeMemberResource extends JsonResource
             'joined_on' => $this->joined_on?->toDateString(),
             'status' => $this->status,
             'balance' => $this->balance,
+            'vote_weight' => $this->vote_weight,
             'notes' => $this->notes,
             'contributions' => MemberContributionResource::collection($this->whenLoaded('contributions')),
             'created_at' => $this->created_at?->toIso8601String(),

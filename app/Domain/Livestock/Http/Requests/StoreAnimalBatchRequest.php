@@ -23,6 +23,7 @@ class StoreAnimalBatchRequest extends FormRequest
             'species' => ['required', 'string', 'max:100'],
             'breed' => ['nullable', 'string', 'max:100'],
             'initial_count' => ['required', 'integer', 'min:1'],
+            'unit_cost' => ['nullable', 'numeric', 'min:0'],
             'acquired_on' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
         ];
