@@ -17,6 +17,7 @@ use App\Models\PartnerClient;
 use App\Models\Payment;
 use App\Models\PayrollRun;
 use App\Models\Payslip;
+use App\Models\PurchaseOrder;
 use App\Models\Receipt;
 use App\Models\Season;
 use App\Models\StockLocation;
@@ -232,6 +233,18 @@ return [
         'requires' => ['farms'],
         'groups' => ['crops'],
         'models' => [CropCycle::class],
+    ],
+
+    'procurement' => [
+        'label' => 'Procurement',
+        'description' => 'Purchase orders for farm inputs and anything else you stock.',
+        'icon' => 'banknotes',
+        'default' => true,
+        // No 'requires': a warehouse-only business can order stock without
+        // ever switching on Farms — Item/Stock is the only real dependency,
+        // and that is core, not a switchable module.
+        'groups' => ['procurement'],
+        'models' => [PurchaseOrder::class],
     ],
 
     /*

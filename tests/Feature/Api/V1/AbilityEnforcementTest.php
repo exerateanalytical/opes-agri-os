@@ -13,6 +13,7 @@ use App\Models\Field;
 use App\Models\Item;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
+use App\Models\PurchaseOrder;
 use App\Models\Role;
 use App\Models\Season;
 use App\Models\User;
@@ -67,6 +68,8 @@ class AbilityEnforcementTest extends TestCase
     protected Season $season;
 
     protected CropCycle $cropCycle;
+
+    protected PurchaseOrder $purchaseOrder;
 
     protected function setUp(): void
     {
@@ -129,6 +132,11 @@ class AbilityEnforcementTest extends TestCase
         $this->field = Field::create(['farm_id' => $this->farm->id, 'name' => 'A Field']);
         $this->season = Season::create(['name' => 'A Season', 'starts_on' => now()->toDateString()]);
         $this->cropCycle = CropCycle::create(['field_id' => $this->field->id, 'season_id' => $this->season->id, 'item_id' => $this->item->id]);
+
+        $this->purchaseOrder = PurchaseOrder::create([
+            'status' => 'issued', 'number' => 'PO-TEST-1', 'order_date' => now()->toDateString(),
+        ]);
+        $this->purchaseOrder->lines()->create(['item_id' => $this->item->id, 'quantity' => 10, 'unit_cost' => 5]);
     }
 
     /** @return array<int, array{method: string, uri: string}> */
@@ -175,6 +183,12 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'GET', 'uri' => "/api/v1/crop-cycles/{$this->cropCycle->id}"],
             ['method' => 'PATCH', 'uri' => "/api/v1/crop-cycles/{$this->cropCycle->id}"],
             ['method' => 'POST', 'uri' => "/api/v1/crop-cycles/{$this->cropCycle->id}/harvest"],
+            ['method' => 'GET', 'uri' => '/api/v1/purchase-orders'],
+            ['method' => 'POST', 'uri' => '/api/v1/purchase-orders'],
+            ['method' => 'GET', 'uri' => "/api/v1/purchase-orders/{$this->purchaseOrder->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/purchase-orders/{$this->purchaseOrder->id}"],
+            ['method' => 'POST', 'uri' => "/api/v1/purchase-orders/{$this->purchaseOrder->id}/issue"],
+            ['method' => 'POST', 'uri' => "/api/v1/purchase-orders/{$this->purchaseOrder->id}/receive"],
         ];
     }
 

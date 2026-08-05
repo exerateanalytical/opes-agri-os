@@ -63,6 +63,7 @@ class Permissions
         // docs/architecture/agri-platform-roadmap.md.
         'Farms' => ['view', 'create', 'update', 'delete'],
         'Crops' => ['view', 'create', 'update', 'record-harvest'],
+        'Procurement' => ['view', 'create', 'update', 'issue', 'receive'],
     ];
 
     /**

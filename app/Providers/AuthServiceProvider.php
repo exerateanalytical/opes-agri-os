@@ -13,6 +13,7 @@ use App\Models\Field;
 use App\Models\Form;
 use App\Models\Item;
 use App\Models\Payment;
+use App\Models\PurchaseOrder;
 use App\Models\Receipt;
 use App\Models\Season;
 use App\Models\Ticket;
@@ -28,6 +29,7 @@ use App\Policies\FieldPolicy;
 use App\Policies\FormPolicy;
 use App\Policies\ItemPolicy;
 use App\Policies\PaymentPolicy;
+use App\Policies\PurchaseOrderPolicy;
 use App\Policies\ReceiptPolicy;
 use App\Policies\SeasonPolicy;
 use App\Policies\TicketPolicy;
@@ -58,6 +60,7 @@ class AuthServiceProvider extends ServiceProvider
         Field::class => FieldPolicy::class,
         Season::class => SeasonPolicy::class,
         CropCycle::class => CropCyclePolicy::class,
+        PurchaseOrder::class => PurchaseOrderPolicy::class,
     ];
 
     public function boot(): void

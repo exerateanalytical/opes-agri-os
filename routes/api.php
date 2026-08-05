@@ -3,6 +3,7 @@
 use App\Domain\Agri\Http\Controllers\Api\V1\CropCycleController;
 use App\Domain\Agri\Http\Controllers\Api\V1\FarmController;
 use App\Domain\Agri\Http\Controllers\Api\V1\FieldController;
+use App\Domain\Agri\Http\Controllers\Api\V1\PurchaseOrderController;
 use App\Domain\Agri\Http\Controllers\Api\V1\SeasonController;
 use App\Domain\Sales\Http\Controllers\Api\V1\ContactController;
 use App\Domain\Sales\Http\Controllers\Api\V1\DocumentController;
@@ -113,4 +114,17 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:crops.update')->name('api.v1.crop-cycles.update');
     Route::post('/crop-cycles/{cropCycle}/harvest', [CropCycleController::class, 'harvest'])
         ->middleware('abilities:crops.record-harvest')->name('api.v1.crop-cycles.harvest');
+
+    Route::middleware('abilities:procurement.view')->group(function () {
+        Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('api.v1.purchase-orders.index');
+        Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('api.v1.purchase-orders.show');
+    });
+    Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])
+        ->middleware('abilities:procurement.create')->name('api.v1.purchase-orders.store');
+    Route::patch('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])
+        ->middleware('abilities:procurement.update')->name('api.v1.purchase-orders.update');
+    Route::post('/purchase-orders/{purchaseOrder}/issue', [PurchaseOrderController::class, 'issue'])
+        ->middleware('abilities:procurement.issue')->name('api.v1.purchase-orders.issue');
+    Route::post('/purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])
+        ->middleware('abilities:procurement.receive')->name('api.v1.purchase-orders.receive');
 });

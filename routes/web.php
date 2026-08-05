@@ -51,6 +51,7 @@ use App\Livewire\Partners\Earnings as PartnerEarnings;
 use App\Livewire\Payments\Index as PaymentsIndex;
 use App\Livewire\Payroll\Index as PayrollIndex;
 use App\Livewire\Payroll\Show as PayrollShow;
+use App\Livewire\Procurement\Index as ProcurementIndex;
 use App\Livewire\Products\Form as ProductForm;
 use App\Livewire\Products\Index as ProductsIndex;
 use App\Livewire\Reports\Index as ReportsIndex;
@@ -238,6 +239,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/assets', AssetsIndex::class)->middleware('can:assets.view')->name('assets');
     Route::get('/farms', FarmsIndex::class)->middleware('can:farms.view')->name('farms');
     Route::get('/crops', CropsIndex::class)->middleware('can:crops.view')->name('crops');
+    Route::get('/procurement', ProcurementIndex::class)->middleware('can:procurement.view')->name('procurement');
     Route::get('/banking', BankingIndex::class)->middleware('can:banking.view')->name('banking');
 
     /*
