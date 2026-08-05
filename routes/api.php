@@ -5,6 +5,7 @@ use App\Domain\Agri\Http\Controllers\Api\V1\FarmController;
 use App\Domain\Agri\Http\Controllers\Api\V1\FieldController;
 use App\Domain\Agri\Http\Controllers\Api\V1\PurchaseOrderController;
 use App\Domain\Agri\Http\Controllers\Api\V1\SeasonController;
+use App\Domain\Assets\Http\Controllers\Api\V1\AssetMaintenanceRecordController;
 use App\Domain\Cooperative\Http\Controllers\Api\V1\CooperativeMeetingController;
 use App\Domain\Cooperative\Http\Controllers\Api\V1\CooperativeMemberController;
 use App\Domain\Cooperative\Http\Controllers\Api\V1\CooperativeVoteController;
@@ -211,4 +212,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:cooperative.update')->name('api.v1.cooperative-votes.close');
     Route::post('/cooperative-votes/{cooperativeVote}/ballots', [CooperativeVoteController::class, 'castVote'])
         ->middleware('abilities:cooperative.cast-vote')->name('api.v1.cooperative-votes.ballots.store');
+
+    Route::get('/fixed-assets/{fixedAsset}/maintenance-records', [AssetMaintenanceRecordController::class, 'index'])
+        ->middleware('abilities:assets.view')->name('api.v1.fixed-assets.maintenance-records.index');
+    Route::post('/fixed-assets/{fixedAsset}/maintenance-records', [AssetMaintenanceRecordController::class, 'store'])
+        ->middleware('abilities:assets.record-maintenance')->name('api.v1.fixed-assets.maintenance-records.store');
 });

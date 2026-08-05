@@ -161,8 +161,14 @@ piece actually needs, not by the order §3 lists them in:
   already on. Greenhouse Management was left out — a business needing environmental logs beyond what a
   soil test or irrigation record already covers gets that as its own milestone when the demand is real,
   not spec'd speculatively now.
-- **Phase 2: Machinery & Equipment, Utility Management.** Extend the existing `FixedAsset`/Assets domain
-  rather than starting a new one — a tractor is a fixed asset with a maintenance log, not a new concept.
+- **Phase 2a shipped: Machinery & Equipment.** `AssetMaintenanceRecord` (service/repair/inspection, cost,
+  optional next-due date) keyed to `FixedAsset`, the same dated-record shape as `AnimalHealthRecord` and
+  `SoilTestRecord` — a tractor is a fixed asset with a maintenance log, not a new concept. Reuses the
+  `assets` module and permission group (a new `record-maintenance` action). Note on precedent: `FixedAsset`
+  itself predates the API-first discipline and has no REST surface (Livewire only) — the new maintenance
+  records got one anyway (`/api/v1/fixed-assets/{fixedAsset}/maintenance-records`), consistent with "every
+  module ships API-first" applying to what's newly built, not requiring a retrofit of what it extends.
+  Utility Management is Phase 2b, not yet built.
 - **Phase 3: Fleet & Logistics, Supply Chain & Traceability.** New domain shape (route/trip tracking,
   chain-of-custody) — its own design pass when it's next.
 - **Phase 4: Partner & NGO CRM, Project & Grant Management.** New domain shape (grant milestones,

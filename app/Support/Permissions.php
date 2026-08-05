@@ -42,7 +42,7 @@ class Permissions
         // What the business owns and what it banks with. Both are the
         // accountant's ground rather than the shopkeeper's, which is why they
         // are separate groups instead of actions on Accounting.
-        'Assets' => ['view', 'create', 'update', 'depreciate', 'dispose'],
+        'Assets' => ['view', 'create', 'update', 'depreciate', 'dispose', 'record-maintenance'],
         'Banking' => ['view', 'manage', 'import', 'reconcile'],
         'Papers' => ['view', 'create', 'issue', 'void'],
         'Forms' => ['view', 'create', 'update', 'delete', 'responses'],

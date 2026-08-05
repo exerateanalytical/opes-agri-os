@@ -34,7 +34,7 @@ class RolePermissionSeeder extends Seeder
             'Leave' => ['view', 'request', 'approve'],
             'Customers' => ['view', 'create', 'update'],
             'Products' => ['view', 'create', 'update', 'adjust-stock', 'manage-locations'],
-            'Assets' => ['view'],
+            'Assets' => ['view', 'record-maintenance'],
             'Banking' => ['view'],
             'Papers' => ['view', 'create', 'issue'],
             'Forms' => ['view', 'create', 'update', 'delete', 'responses'],
@@ -80,7 +80,7 @@ class RolePermissionSeeder extends Seeder
             'Products' => ['view'],
             // The asset register and the bank reconciliation are the
             // accountant's work before they are anybody's.
-            'Assets' => ['view', 'create', 'update', 'depreciate', 'dispose'],
+            'Assets' => ['view', 'create', 'update', 'depreciate', 'dispose', 'record-maintenance'],
             'Banking' => ['view', 'manage', 'import', 'reconcile'],
             'Papers' => ['view', 'create'],
             'Forms' => ['view', 'responses'],

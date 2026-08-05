@@ -15,6 +15,7 @@ use App\Models\CropCycle;
 use App\Models\Document;
 use App\Models\Farm;
 use App\Models\Field;
+use App\Models\FixedAsset;
 use App\Models\Item;
 use App\Models\Loan;
 use App\Models\Payment;
@@ -89,6 +90,8 @@ class AbilityEnforcementTest extends TestCase
 
     protected CooperativeVote $cooperativeVote;
 
+    protected FixedAsset $fixedAsset;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -101,6 +104,11 @@ class AbilityEnforcementTest extends TestCase
             'name' => 'Acme Ltd',
             'owner_id' => $this->owner->id,
             'currency' => 'USD',
+            // Growth-plan-and-above modules (assets, etc.) are exercised by
+            // this sweep too, so the fixture company needs a plan that
+            // actually includes them.
+            'plan' => 'business',
+            'account_type' => 'active',
         ]);
         $this->joinCompany($this->company, $this->owner, Role::OWNER);
         app(CurrentCompany::class)->set($this->company);
@@ -175,6 +183,12 @@ class AbilityEnforcementTest extends TestCase
 
         $this->cooperativeVote = CooperativeVote::create([
             'title' => 'Motion', 'status' => 'open', 'opened_on' => now()->toDateString(),
+        ]);
+
+        $this->fixedAsset = FixedAsset::create([
+            'name' => 'Delivery Van', 'category' => 'vehicles', 'acquired_on' => now()->toDateString(),
+            'cost' => 8000000, 'residual_value' => 0, 'method' => 'straight_line',
+            'useful_life_months' => 48, 'status' => 'active',
         ]);
     }
 
@@ -266,6 +280,8 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'GET', 'uri' => "/api/v1/cooperative-votes/{$this->cooperativeVote->id}"],
             ['method' => 'POST', 'uri' => "/api/v1/cooperative-votes/{$this->cooperativeVote->id}/close"],
             ['method' => 'POST', 'uri' => "/api/v1/cooperative-votes/{$this->cooperativeVote->id}/ballots"],
+            ['method' => 'GET', 'uri' => "/api/v1/fixed-assets/{$this->fixedAsset->id}/maintenance-records"],
+            ['method' => 'POST', 'uri' => "/api/v1/fixed-assets/{$this->fixedAsset->id}/maintenance-records"],
         ];
     }
 

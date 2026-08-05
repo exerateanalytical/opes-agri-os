@@ -75,6 +75,11 @@ class FixedAsset extends Model
         return $this->hasMany(DepreciationEntry::class);
     }
 
+    public function maintenanceRecords(): HasMany
+    {
+        return $this->hasMany(AssetMaintenanceRecord::class);
+    }
+
     public function categoryLabel(): string
     {
         return ChartOfAccounts::ASSET_CATEGORIES[$this->category][5] ?? ucfirst((string) $this->category);

@@ -431,4 +431,20 @@ class FixedAssetsTest extends TestCase
 
         $this->assertSame(0, FixedAsset::query()->count());
     }
+
+    public function test_it_records_maintenance_against_an_asset(): void
+    {
+        $van = $this->buyVan();
+
+        Livewire::actingAs($this->owner)
+            ->test(AssetsIndex::class)
+            ->call('openMaintenance', $van->id)
+            ->set('maintenanceDescription', 'Oil change and filter')
+            ->set('maintenancePerformedOn', now()->toDateString())
+            ->set('maintenanceCost', '25000')
+            ->call('saveMaintenance')
+            ->assertHasNoErrors();
+
+        $this->assertSame(1, $van->fresh()->maintenanceRecords()->count());
+    }
 }

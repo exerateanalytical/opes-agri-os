@@ -73,6 +73,19 @@ class Index extends Component
 
     public string $disposalNote = '';
 
+    // ── Maintenance ─────────────────────────────────────────────────────
+    public ?string $maintainingAssetId = null;
+
+    public string $maintenanceType = 'service';
+
+    public string $maintenanceDescription = '';
+
+    public string $maintenancePerformedOn = '';
+
+    public string $maintenanceCost = '';
+
+    public string $maintenanceNextDueOn = '';
+
     public function mount(): void
     {
         Gate::authorize('assets.view');
@@ -228,6 +241,51 @@ class Index extends Component
         } catch (RuntimeException $e) {
             session()->flash('error', $e->getMessage());
         }
+    }
+
+    public function openMaintenance(string $id): void
+    {
+        Gate::authorize('assets.record-maintenance');
+
+        $this->maintainingAssetId = $id;
+        $this->maintenanceType = 'service';
+        $this->maintenanceDescription = '';
+        $this->maintenancePerformedOn = now()->toDateString();
+        $this->maintenanceCost = '';
+        $this->maintenanceNextDueOn = '';
+        $this->resetValidation();
+    }
+
+    public function closeMaintenance(): void
+    {
+        $this->maintainingAssetId = null;
+    }
+
+    public function saveMaintenance(): void
+    {
+        Gate::authorize('assets.record-maintenance');
+
+        $data = $this->validate([
+            'maintenanceType' => ['required', 'in:service,repair,inspection'],
+            'maintenanceDescription' => ['required', 'string', 'max:255'],
+            'maintenancePerformedOn' => ['required', 'date'],
+            'maintenanceCost' => ['nullable', 'numeric', 'min:0'],
+            'maintenanceNextDueOn' => ['nullable', 'date', 'after_or_equal:maintenancePerformedOn'],
+        ]);
+
+        $asset = FixedAsset::query()->findOrFail($this->maintainingAssetId);
+
+        $asset->maintenanceRecords()->create([
+            'maintenance_type' => $data['maintenanceType'],
+            'description' => $data['maintenanceDescription'],
+            'performed_on' => $data['maintenancePerformedOn'],
+            'cost' => $data['maintenanceCost'] !== '' ? $data['maintenanceCost'] : null,
+            'next_due_on' => $data['maintenanceNextDueOn'] ?: null,
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->maintainingAssetId = null;
+        session()->flash('status', 'Maintenance recorded.');
     }
 
     public function render(): View

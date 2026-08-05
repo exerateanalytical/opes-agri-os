@@ -2,6 +2,7 @@
 
 use App\Models\Animal;
 use App\Models\AnimalBatch;
+use App\Models\AssetMaintenanceRecord;
 use App\Models\BankAccount;
 use App\Models\BusinessDocument;
 use App\Models\Contact;
@@ -144,7 +145,7 @@ return [
         'icon' => 'briefcase',
         'default' => true,
         'groups' => ['assets'],
-        'models' => [FixedAsset::class],
+        'models' => [FixedAsset::class, AssetMaintenanceRecord::class],
     ],
 
     'banking' => [

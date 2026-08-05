@@ -252,14 +252,20 @@
                 </div>
 
                 @if (! $asset->isDisposed())
-                    @can('assets.dispose')
-                        <div class="mt-2.5 flex flex-wrap gap-2 pl-[54px]">
+                    <div class="mt-2.5 flex flex-wrap gap-2 pl-[54px]">
+                        @can('assets.record-maintenance')
+                            <button type="button" wire:click="openMaintenance('{{ $asset->id }}')"
+                                    class="focusable rounded-lg bg-surface-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-2 hover:bg-tint-blue hover:text-brand">
+                                Record maintenance
+                            </button>
+                        @endcan
+                        @can('assets.dispose')
                             <button type="button" wire:click="startDisposing('{{ $asset->id }}')"
                                     class="focusable rounded-lg bg-surface-2 px-3 py-1.5 text-[12.5px] font-semibold text-ink-2 hover:bg-tint-blue hover:text-brand">
                                 Sell or scrap
                             </button>
-                        </div>
-                    @endcan
+                        @endcan
+                    </div>
                 @endif
 
                 @if ($disposing === $asset->id)
@@ -298,6 +304,50 @@
                                 Confirm
                             </button>
                             <button type="button" wire:click="cancel"
+                                    class="tap focusable flex h-11 items-center justify-center rounded-xl border border-border bg-surface px-5 text-[14.5px] font-semibold text-ink">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
+                @if ($maintainingAssetId === $asset->id)
+                    <div class="mt-3 rounded-xl border border-border bg-surface-2/50 p-4">
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <label class="{{ $labelClass }}" for="m-type-{{ $asset->id }}">Type</label>
+                                <select id="m-type-{{ $asset->id }}" wire:model="maintenanceType" class="{{ $inputClass }}">
+                                    <option value="service">Service</option>
+                                    <option value="repair">Repair</option>
+                                    <option value="inspection">Inspection</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="m-date-{{ $asset->id }}">Date</label>
+                                <input id="m-date-{{ $asset->id }}" type="date" wire:model="maintenancePerformedOn" class="{{ $inputClass }}">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="{{ $labelClass }}" for="m-desc-{{ $asset->id }}">Description</label>
+                            <input id="m-desc-{{ $asset->id }}" type="text" wire:model="maintenanceDescription" class="{{ $inputClass }}" placeholder="Oil change and filter">
+                            @error('maintenanceDescription') <p class="mt-1.5 text-[13px] font-medium text-negative">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <label class="{{ $labelClass }}" for="m-cost-{{ $asset->id }}">Cost (optional)</label>
+                                <input id="m-cost-{{ $asset->id }}" type="number" step="1" min="0" inputmode="numeric" wire:model="maintenanceCost" class="{{ $inputClass }} tnum">
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="m-next-{{ $asset->id }}">Next due (optional)</label>
+                                <input id="m-next-{{ $asset->id }}" type="date" wire:model="maintenanceNextDueOn" class="{{ $inputClass }}">
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-col gap-3 sm:flex-row-reverse">
+                            <button type="button" wire:click="saveMaintenance"
+                                    class="tap focusable flex h-11 items-center justify-center rounded-xl bg-fill-brand px-5 text-[14.5px] font-semibold text-white hover:opacity-90">
+                                Save
+                            </button>
+                            <button type="button" wire:click="closeMaintenance"
                                     class="tap focusable flex h-11 items-center justify-center rounded-xl border border-border bg-surface px-5 text-[14.5px] font-semibold text-ink">
                                 Cancel
                             </button>
