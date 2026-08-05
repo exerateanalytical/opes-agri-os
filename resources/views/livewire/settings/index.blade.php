@@ -216,6 +216,21 @@
             </x-ui.panel>
         @endif
 
+        {{-- API Keys --}}
+        @can('settings.update')
+            <x-ui.panel title="API Keys" action="Manage" :action-href="route('settings.api-keys')">
+                <div class="flex items-center gap-3">
+                    <span class="flex size-[42px] shrink-0 items-center justify-center rounded-xl bg-tint-blue">
+                        <x-icon name="key" class="size-[20px] text-brand" />
+                    </span>
+                    <div>
+                        <p class="text-[14.5px] font-bold text-ink">Tokens for the OPES AGRI OS API</p>
+                        <p class="mt-0.5 text-[12.5px] text-muted">Create and revoke keys for integrations.</p>
+                    </div>
+                </div>
+            </x-ui.panel>
+        @endcan
+
         {{-- Team --}}
         <x-ui.panel title="Team" body-class="-mx-1.5">
             @can('users.invite')
