@@ -64,6 +64,7 @@ use App\Livewire\Settings\Billing as SettingsBilling;
 use App\Livewire\Settings\Index as SettingsIndex;
 use App\Livewire\Stock\Count as StockCount;
 use App\Livewire\Stock\Locations as StockLocations;
+use App\Livewire\Stock\Trace as StockTrace;
 use App\Livewire\Stock\Valuation as StockValuation;
 use App\Livewire\Team\Index as TeamIndex;
 use App\Livewire\Team\Show as TeamShow;
@@ -196,6 +197,7 @@ Route::middleware('auth')->group(function () {
     // inventory where it keeps the things being counted.
     Route::get('/products/stock', StockValuation::class)->middleware('can:products.view')->name('products.stock');
     Route::get('/products/stock/{stocktake}', StockCount::class)->middleware('can:products.view')->name('products.stock.count');
+    Route::get('/products/trace', StockTrace::class)->middleware('can:products.view')->name('products.trace');
     Route::get('/products/{item}/edit', ProductForm::class)->middleware('can:update,item')->name('products.edit');
 
     Route::get('/business', BusinessEdit::class)->middleware('can:business.view')->name('business');

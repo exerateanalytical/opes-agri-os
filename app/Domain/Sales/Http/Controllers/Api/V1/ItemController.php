@@ -5,8 +5,10 @@ namespace App\Domain\Sales\Http\Controllers\Api\V1;
 use App\Domain\Sales\Http\Requests\StoreItemRequest;
 use App\Domain\Sales\Http\Requests\UpdateItemRequest;
 use App\Domain\Sales\Http\Resources\ItemResource;
+use App\Domain\Sales\Http\Resources\StockMovementResource;
 use App\Http\Controllers\Api\V1\Controller;
 use App\Models\Item;
+use App\Models\StockMovement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -56,5 +58,25 @@ class ItemController extends Controller
         $item->delete();
 
         return response()->noContent();
+    }
+
+    /**
+     * Every movement recorded against a batch — a harvest or a delivery in,
+     * a sale or a void out — in the order it happened. The chain-of-custody
+     * a batch's `batch_number` already carried since it was first written
+     * (see docs/architecture/agri-platform-roadmap.md); this just reads it
+     * back rather than adding anywhere new for it to be recorded.
+     */
+    public function traceBatch(Item $item, string $batchNumber): AnonymousResourceCollection
+    {
+        $this->authorize('view', $item);
+
+        $movements = StockMovement::query()
+            ->where('item_id', $item->id)
+            ->where('batch_number', $batchNumber)
+            ->orderBy('occurred_at')
+            ->get();
+
+        return StockMovementResource::collection($movements);
     }
 }

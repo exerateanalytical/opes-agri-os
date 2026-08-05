@@ -59,6 +59,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
     Route::middleware('abilities:products.view')->group(function () {
         Route::get('/items', [ItemController::class, 'index'])->name('api.v1.items.index');
         Route::get('/items/{item}', [ItemController::class, 'show'])->name('api.v1.items.show');
+        Route::get('/items/{item}/batches/{batchNumber}/trace', [ItemController::class, 'traceBatch'])->name('api.v1.items.batches.trace');
     });
     Route::post('/items', [ItemController::class, 'store'])
         ->middleware('abilities:products.create')->name('api.v1.items.store');

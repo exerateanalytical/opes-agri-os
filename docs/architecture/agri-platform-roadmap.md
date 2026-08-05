@@ -181,9 +181,14 @@ piece actually needs, not by the order §3 lists them in:
   odometer, fuel cost) keyed to `FixedAsset`, the same shape as `AssetMaintenanceRecord` — a vehicle is a
   fixed asset with a trip log, same reasoning that decided Phase 2a. Distance is computed from the two
   odometer readings rather than stored, so it can never drift from what was actually entered. Reuses the
-  `assets` module and permission group (new `record-trip` action). Supply Chain & Traceability is Phase
-  3b, not yet built — genuinely different from a trip log (chain-of-custody across the whole harvest →
-  stock → sale path, not one asset's activity).
+  `assets` module and permission group (new `record-trip` action).
+
+  **Phase 3b shipped: Supply Chain & Traceability.** No new schema at all — `stock_movements.batch_number`
+  has carried a batch's identity since Agri M1, and every movement against it (a delivery or harvest in,
+  a sale or void out) was always there to read back; this phase is a read-only surface over data the
+  platform already writes, not a new capability. `ItemController::traceBatch()` returns a batch's full
+  history in order; the `Trace a batch` screen (`/products/trace`) reads it back on the Products module.
+  Reuses the `products` permission group — no new one needed for a query.
 - **Phase 4: Partner & NGO CRM, Project & Grant Management.** New domain shape (grant milestones,
   disbursement conditions) — closer to Cooperative's shape than to Sales', worth designing alongside
   whichever comes first.

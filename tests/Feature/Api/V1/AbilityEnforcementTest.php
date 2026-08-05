@@ -211,6 +211,7 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'GET', 'uri' => "/api/v1/items/{$this->item->id}"],
             ['method' => 'PATCH', 'uri' => "/api/v1/items/{$this->item->id}"],
             ['method' => 'DELETE', 'uri' => "/api/v1/items/{$this->item->id}"],
+            ['method' => 'GET', 'uri' => "/api/v1/items/{$this->item->id}/batches/TEST-BATCH/trace"],
             ['method' => 'GET', 'uri' => '/api/v1/documents'],
             ['method' => 'POST', 'uri' => '/api/v1/documents'],
             ['method' => 'GET', 'uri' => "/api/v1/documents/{$this->draftDocument->id}"],
