@@ -311,6 +311,19 @@ return [
         'models' => [GrantProject::class],
     ],
 
+    'analytics' => [
+        'label' => 'Analytics & BI',
+        'description' => 'A cross-module dashboard over crop, livestock, procurement, asset, cooperative and grant data.',
+        'icon' => 'chart-bar',
+        'default' => true,
+        // No 'requires' and no per-source 'requires' either: the dashboard
+        // itself has no model-backed detail page to gate (its one screen is
+        // page-level, like Reports), and each section already checks its own
+        // source module independently and renders empty rather than erroring
+        // when that module is off — see AnalyticsSummaryService.
+        'groups' => ['analytics'],
+    ],
+
     /*
      * Not offered as a switch: the partner programme is already conditioned on
      * the account being a secretariat, and a secretariat that turned it off

@@ -323,6 +323,7 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'DELETE', 'uri' => "/api/v1/grant-projects/{$this->grantProject->id}"],
             ['method' => 'GET', 'uri' => "/api/v1/grant-projects/{$this->grantProject->id}/transactions"],
             ['method' => 'POST', 'uri' => "/api/v1/grant-projects/{$this->grantProject->id}/transactions"],
+            ['method' => 'GET', 'uri' => '/api/v1/analytics/dashboard'],
         ];
     }
 

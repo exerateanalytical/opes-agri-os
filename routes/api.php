@@ -5,6 +5,7 @@ use App\Domain\Agri\Http\Controllers\Api\V1\FarmController;
 use App\Domain\Agri\Http\Controllers\Api\V1\FieldController;
 use App\Domain\Agri\Http\Controllers\Api\V1\PurchaseOrderController;
 use App\Domain\Agri\Http\Controllers\Api\V1\SeasonController;
+use App\Domain\Analytics\Http\Controllers\Api\V1\AnalyticsController;
 use App\Domain\Assets\Http\Controllers\Api\V1\AssetMaintenanceRecordController;
 use App\Domain\Assets\Http\Controllers\Api\V1\FleetTripController;
 use App\Domain\Cooperative\Http\Controllers\Api\V1\CooperativeMeetingController;
@@ -268,4 +269,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:grants.delete')->name('api.v1.grant-projects.destroy');
     Route::post('/grant-projects/{grantProject}/transactions', [GrantProjectController::class, 'recordTransaction'])
         ->middleware('abilities:grants.record-transaction')->name('api.v1.grant-projects.transactions.store');
+
+    Route::get('/analytics/dashboard', [AnalyticsController::class, 'dashboard'])
+        ->middleware('abilities:analytics.view')->name('api.v1.analytics.dashboard');
 });

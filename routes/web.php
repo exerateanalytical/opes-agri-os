@@ -16,6 +16,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\VerificationController;
 use App\Livewire\Accounting\Declarations as AccountingDeclarations;
 use App\Livewire\Accounting\Index as AccountingIndex;
+use App\Livewire\Analytics\Dashboard as AnalyticsDashboard;
 use App\Livewire\Assets\Index as AssetsIndex;
 use App\Livewire\Banking\Index as BankingIndex;
 use App\Livewire\Business\Artisans as BusinessArtisans;
@@ -252,6 +253,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/utilities', UtilitiesIndex::class)->middleware('can:utilities.view')->name('utilities');
     Route::get('/partner-crm', PartnersIndex::class)->middleware('can:partner-crm.view')->name('partner-crm');
     Route::get('/grants', GrantsIndex::class)->middleware('can:grants.view')->name('grants');
+    Route::get('/analytics', AnalyticsDashboard::class)->middleware('can:analytics.view')->name('analytics');
     Route::get('/banking', BankingIndex::class)->middleware('can:banking.view')->name('banking');
 
     /*

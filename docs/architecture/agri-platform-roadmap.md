@@ -220,8 +220,47 @@ piece actually needs, not by the order §3 lists them in:
   now a `GrantProject` tracks one total against one running spend, not a per-category budget) — both are
   real shape a heavier grants-management tool would need, but nothing shipped so far asked for them, and
   speculative schema is exactly what this roadmap avoids building ahead of demand.
-- **Phase 5: Analytics & Business Intelligence** beyond what Sales/Reports already provide — dashboards
-  and cross-module reporting once there's enough shipped data across modules to make it worth building.
+- **Phase 5 shipped: Analytics & Business Intelligence** — a single cross-module dashboard,
+  `App\Domain\Analytics`, over data every earlier V1–V4 module already writes. No new schema at all, the
+  same shape Phase 3b (Traceability) took: `AnalyticsSummaryService` reads `CropCycle`, `Animal`/
+  `AnimalProductionRecord`, `PurchaseOrder`, `AssetMaintenanceRecord`, `Loan`/`MemberContribution`, and
+  `GrantProject`/`GrantTransaction` and aggregates each into its own section — crop yield (planned vs
+  actual), livestock production volume, procurement spend (received vs open order value), asset
+  maintenance cost, loan portfolio (outstanding vs disbursed) plus member contributions, and grant fund
+  utilisation (received vs spent). One period-over-period view ships: input cost vs harvest volume,
+  month by month, over a fixed six-month lookback — not a date-range picker, because nothing shipped so
+  far asked for one and a fixed window is what "operations picture" actually needs day to day.
+
+  Each section checks its own source module independently and renders `enabled: false` rather than
+  erroring when that module is off for the company — a business with Crops switched off gets an empty
+  crops card, not a broken page, the same "degrade gracefully" contract every module toggle promises.
+  This is also why `analytics` itself has no `requires`: its one screen has no model-backed detail page
+  to gate (page-level, like Reports), so there is nothing for a disabled source module to make
+  unreachable.
+
+  Permissions are a new `Analytics` group with a single `analytics.view` ability — deliberately not
+  folded into `Reports`, and deliberately not per-source-module (`crops.view` etc.): this dashboard reads
+  across modules a role might not otherwise have `view` on individually (a Sales Officer has no
+  `farms.view`, `livestock.view` or `grants.view`, but does get `Analytics => ['view']`, same roster
+  as `Reports`), so gating it behind six other permissions would just mean most roles see nothing on the
+  page they were granted access to. No `create`/`update`/`delete`/`export` actions exist in the group —
+  the dashboard writes nothing and CSV export was deliberately left out of this milestone (see below).
+
+  API-first as usual: `GET /api/v1/analytics/dashboard` behind `abilities:analytics.view`, returning the
+  whole aggregation in one call rather than one endpoint per section — there is no per-section drill-down
+  page to link into yet, so splitting the response into six round trips would add latency without adding
+  a consumer that needs it. Livewire UI is `App\Livewire\Analytics\Dashboard`, one screen, reusing the
+  existing `x-ui.panel`/`x-ui.bar-chart` components Reports already established rather than introducing a
+  charting dependency.
+
+  Deliberately **not** built this milestone: CSV/PDF export (Reports has `reports.export` for the
+  Sales-specific case; a cross-module export is a different, larger surface — deciding its shape once a
+  real consumer asks for it, not speculatively now), a custom date-range picker (the fixed six-month trend
+  window above is the only period control), drill-down from a dashboard number into the underlying
+  records (each section is a summary card, not a filtered list view — the source module's own screen is
+  where a business goes to see the records behind a number), and per-farm/per-field or per-member
+  breakdowns (every figure here is company-wide; slicing by farm or member is a real next step but not
+  one anything shipped so far has asked for). This closes V4 — every phase in §4 has now shipped.
 
 **Five inventory items are already usable today and were deliberately NOT rebuilt as separate modules,**
 because doing so would duplicate schema that already exists:

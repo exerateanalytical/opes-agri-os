@@ -80,6 +80,7 @@ return [
         ['key' => 'partners', 'label' => 'Clients', 'icon' => 'printer', 'route' => 'partners.clients', 'ability' => 'partners.view'],
         ['key' => 'partner-earnings', 'label' => 'Earnings', 'icon' => 'banknotes', 'route' => 'partners.earnings', 'ability' => 'partners.view'],
         ['key' => 'reports', 'label' => 'Reports', 'icon' => 'chart-bar', 'route' => 'reports', 'ability' => 'reports.view'],
+        ['key' => 'analytics', 'label' => 'Analytics', 'icon' => 'chart-bar', 'route' => 'analytics', 'ability' => 'analytics.view'],
         ['key' => 'accounting', 'label' => 'Accounting', 'icon' => 'wallet', 'route' => 'accounting', 'ability' => 'accounting.view'],
         ['key' => 'payments', 'label' => 'Payments', 'icon' => 'credit-card', 'route' => 'payments', 'ability' => 'payments.view'],
         ['key' => 'assets', 'label' => 'Assets', 'icon' => 'briefcase', 'route' => 'assets', 'ability' => 'assets.view'],

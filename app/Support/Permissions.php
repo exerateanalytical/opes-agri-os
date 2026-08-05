@@ -84,6 +84,12 @@ class Permissions
         // Cooperative keep loan actions in its own group rather than
         // folding them into Accounting.
         'Grants' => ['view', 'create', 'update', 'delete', 'record-transaction'],
+        // Read-only by design — this group has no create/update/delete
+        // because the dashboard writes nothing; it reads across modules a
+        // role might not otherwise have `view` on individually, which is
+        // why it is its own group rather than folded into Reports (see
+        // docs/architecture/agri-platform-roadmap.md, V4 Phase 5).
+        'Analytics' => ['view'],
     ];
 
     /**
