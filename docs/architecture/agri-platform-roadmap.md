@@ -108,6 +108,19 @@ Breeding/genealogy is not yet built — see below.
 shape entirely (membership, shares, loan ledgers, voting) — genuinely new ground, not an extension of
 existing Sales/Accounting patterns.
 
+**V3 M1 shipped:** member registry and share-capital/savings contributions. `CooperativeMember` reuses
+`Contact` (a new `type=member`, following the same reuse Procurement did for suppliers) for the person
+record rather than a parallel name/phone table, and wraps it with membership-specific fields
+(membership number, joined-on, status) plus a cached `balance` recomputed from `MemberContribution` rows
+the same way `Contact::recomputeBalance()` works for document balances. Deliberately **not** built yet
+in this milestone: loans/credit (a real liability ledger, amortisation, arrears — its own domain shape,
+not a contribution in reverse) and voting/governance (quorum rules, AGM records) — both need their own
+design pass rather than being bolted onto the membership registry. A contribution does not post to the
+accounting ledger, the same open question flagged for harvest/livestock-production value above — a
+cooperative's contributions and any future loan disbursements are real cash movements, though, so this
+one may need resolving *before* V3's next milestone rather than deferred to V3 the way the harvest
+question was to V1.
+
 **Later, unscheduled:** Fisheries, Beekeeping, Forestry, Greenhouse, Nursery & Seed, Soil & Fertility,
 Irrigation, Machinery & Equipment, Utility Management, Fleet & Logistics, Supply Chain & Traceability,
 Partner & NGO CRM, Project & Grant Management, Analytics & BI beyond what Sales/Reports already provide.

@@ -53,6 +53,7 @@ class RolePermissionSeeder extends Seeder
             'Crops' => ['view', 'create', 'update', 'record-harvest'],
             'Procurement' => ['view', 'create', 'update', 'issue'],
             'Livestock' => ['view', 'create', 'update', 'record-health', 'record-production'],
+            'Cooperative' => ['view', 'create', 'update', 'record-contribution'],
         ]],
         'accountant' => ['name' => 'Accountant', 'level' => 4, 'grants' => [
             'Business' => ['view'],
@@ -87,6 +88,7 @@ class RolePermissionSeeder extends Seeder
             // recording and issuing stays with whoever runs the farm.
             'Procurement' => ['view'],
             'Livestock' => ['view'],
+            'Cooperative' => ['view'],
         ]],
         'sales-officer' => ['name' => 'Sales Officer', 'level' => 5, 'grants' => [
             'Business' => ['view'],
@@ -140,6 +142,7 @@ class RolePermissionSeeder extends Seeder
             'Crops' => ['view'],
             'Procurement' => ['view'],
             'Livestock' => ['view'],
+            'Cooperative' => ['view'],
         ]],
     ];
 

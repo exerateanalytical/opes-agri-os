@@ -5,6 +5,7 @@ use App\Domain\Agri\Http\Controllers\Api\V1\FarmController;
 use App\Domain\Agri\Http\Controllers\Api\V1\FieldController;
 use App\Domain\Agri\Http\Controllers\Api\V1\PurchaseOrderController;
 use App\Domain\Agri\Http\Controllers\Api\V1\SeasonController;
+use App\Domain\Cooperative\Http\Controllers\Api\V1\CooperativeMemberController;
 use App\Domain\Livestock\Http\Controllers\Api\V1\AnimalBatchController;
 use App\Domain\Livestock\Http\Controllers\Api\V1\AnimalController;
 use App\Domain\Sales\Http\Controllers\Api\V1\ContactController;
@@ -157,4 +158,17 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:livestock.delete')->name('api.v1.animal-batches.destroy');
     Route::post('/animal-batches/{animalBatch}/adjust-count', [AnimalBatchController::class, 'adjustCount'])
         ->middleware('abilities:livestock.update')->name('api.v1.animal-batches.adjust-count');
+
+    Route::middleware('abilities:cooperative.view')->group(function () {
+        Route::get('/cooperative-members', [CooperativeMemberController::class, 'index'])->name('api.v1.cooperative-members.index');
+        Route::get('/cooperative-members/{cooperativeMember}', [CooperativeMemberController::class, 'show'])->name('api.v1.cooperative-members.show');
+    });
+    Route::post('/cooperative-members', [CooperativeMemberController::class, 'store'])
+        ->middleware('abilities:cooperative.create')->name('api.v1.cooperative-members.store');
+    Route::patch('/cooperative-members/{cooperativeMember}', [CooperativeMemberController::class, 'update'])
+        ->middleware('abilities:cooperative.update')->name('api.v1.cooperative-members.update');
+    Route::delete('/cooperative-members/{cooperativeMember}', [CooperativeMemberController::class, 'destroy'])
+        ->middleware('abilities:cooperative.delete')->name('api.v1.cooperative-members.destroy');
+    Route::post('/cooperative-members/{cooperativeMember}/contributions', [CooperativeMemberController::class, 'recordContribution'])
+        ->middleware('abilities:cooperative.record-contribution')->name('api.v1.cooperative-members.contributions.store');
 });

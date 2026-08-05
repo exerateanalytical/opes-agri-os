@@ -8,6 +8,7 @@ use App\Models\Animal;
 use App\Models\AnimalBatch;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\CooperativeMember;
 use App\Models\CropCycle;
 use App\Models\Document;
 use App\Models\Farm;
@@ -76,6 +77,8 @@ class AbilityEnforcementTest extends TestCase
     protected Animal $animal;
 
     protected AnimalBatch $animalBatch;
+
+    protected CooperativeMember $cooperativeMember;
 
     protected function setUp(): void
     {
@@ -149,6 +152,8 @@ class AbilityEnforcementTest extends TestCase
         $this->animalBatch = AnimalBatch::create([
             'species' => 'Broiler', 'initial_count' => 10, 'current_count' => 10, 'status' => 'active',
         ]);
+
+        $this->cooperativeMember = CooperativeMember::create(['contact_id' => $this->contact->id, 'status' => 'active']);
     }
 
     /** @return array<int, array{method: string, uri: string}> */
@@ -214,6 +219,12 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'PATCH', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}"],
             ['method' => 'DELETE', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}"],
             ['method' => 'POST', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}/adjust-count"],
+            ['method' => 'GET', 'uri' => '/api/v1/cooperative-members'],
+            ['method' => 'POST', 'uri' => '/api/v1/cooperative-members'],
+            ['method' => 'GET', 'uri' => "/api/v1/cooperative-members/{$this->cooperativeMember->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/cooperative-members/{$this->cooperativeMember->id}"],
+            ['method' => 'DELETE', 'uri' => "/api/v1/cooperative-members/{$this->cooperativeMember->id}"],
+            ['method' => 'POST', 'uri' => "/api/v1/cooperative-members/{$this->cooperativeMember->id}/contributions"],
         ];
     }
 

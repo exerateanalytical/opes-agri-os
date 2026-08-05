@@ -68,6 +68,7 @@ class Permissions
         // group, since one role always administers all of it, same
         // reasoning as Farms covering farms/fields/seasons.
         'Livestock' => ['view', 'create', 'update', 'delete', 'record-health', 'record-production'],
+        'Cooperative' => ['view', 'create', 'update', 'delete', 'record-contribution'],
     ];
 
     /**

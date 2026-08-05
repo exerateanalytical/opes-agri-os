@@ -25,6 +25,7 @@ use App\Livewire\Business\Logo as BusinessLogo;
 use App\Livewire\Business\Reviews as BusinessReviews;
 use App\Livewire\Business\Stationery;
 use App\Livewire\CalendarPage\Index as CalendarIndex;
+use App\Livewire\Cooperative\Index as CooperativeIndex;
 use App\Livewire\Crops\Index as CropsIndex;
 use App\Livewire\Customers\Form as CustomerForm;
 use App\Livewire\Customers\Index as CustomersIndex;
@@ -242,6 +243,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/crops', CropsIndex::class)->middleware('can:crops.view')->name('crops');
     Route::get('/procurement', ProcurementIndex::class)->middleware('can:procurement.view')->name('procurement');
     Route::get('/livestock', LivestockIndex::class)->middleware('can:livestock.view')->name('livestock');
+    Route::get('/cooperative', CooperativeIndex::class)->middleware('can:cooperative.view')->name('cooperative');
     Route::get('/banking', BankingIndex::class)->middleware('can:banking.view')->name('banking');
 
     /*

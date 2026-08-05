@@ -23,7 +23,7 @@ class StoreContactRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => ['sometimes', Rule::in(['customer', 'supplier', 'vendor', 'lead'])],
+            'type' => ['sometimes', Rule::in(['customer', 'supplier', 'vendor', 'lead', 'member'])],
             'name' => ['required', 'string', 'max:255'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],

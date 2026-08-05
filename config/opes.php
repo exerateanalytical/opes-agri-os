@@ -67,6 +67,7 @@ return [
         ['key' => 'crops', 'label' => 'Crops', 'icon' => 'cube', 'route' => 'crops', 'ability' => 'crops.view'],
         ['key' => 'procurement', 'label' => 'Purchase orders', 'icon' => 'banknotes', 'route' => 'procurement', 'ability' => 'procurement.view'],
         ['key' => 'livestock', 'label' => 'Livestock', 'icon' => 'briefcase', 'route' => 'livestock', 'ability' => 'livestock.view'],
+        ['key' => 'cooperative', 'label' => 'Cooperative', 'icon' => 'users', 'route' => 'cooperative', 'ability' => 'cooperative.view'],
         ['key' => 'papers', 'label' => 'Documents', 'icon' => 'document', 'route' => 'papers', 'ability' => 'papers.view'],
         ['key' => 'forms', 'label' => 'Forms', 'icon' => 'clipboard', 'route' => 'forms', 'ability' => 'forms.view'],
         ['key' => 'events', 'label' => 'Events', 'icon' => 'ticket', 'route' => 'events', 'ability' => 'events.view'],

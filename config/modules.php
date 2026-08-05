@@ -5,6 +5,7 @@ use App\Models\AnimalBatch;
 use App\Models\BankAccount;
 use App\Models\BusinessDocument;
 use App\Models\Contact;
+use App\Models\CooperativeMember;
 use App\Models\CropCycle;
 use App\Models\Document;
 use App\Models\Employee;
@@ -258,6 +259,15 @@ return [
         // Farms on first — an animal's farm_id is optional.
         'groups' => ['livestock'],
         'models' => [Animal::class, AnimalBatch::class],
+    ],
+
+    'cooperative' => [
+        'label' => 'Cooperative',
+        'description' => 'Member registry and the share/savings contributions members make.',
+        'icon' => 'users',
+        'default' => true,
+        'groups' => ['cooperative'],
+        'models' => [CooperativeMember::class],
     ],
 
     /*
