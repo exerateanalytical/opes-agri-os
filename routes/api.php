@@ -5,6 +5,7 @@ use App\Domain\Agri\Http\Controllers\Api\V1\FarmController;
 use App\Domain\Agri\Http\Controllers\Api\V1\FieldController;
 use App\Domain\Agri\Http\Controllers\Api\V1\PurchaseOrderController;
 use App\Domain\Agri\Http\Controllers\Api\V1\SeasonController;
+use App\Domain\Livestock\Http\Controllers\Api\V1\AnimalBatchController;
 use App\Domain\Livestock\Http\Controllers\Api\V1\AnimalController;
 use App\Domain\Sales\Http\Controllers\Api\V1\ContactController;
 use App\Domain\Sales\Http\Controllers\Api\V1\DocumentController;
@@ -143,4 +144,17 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:livestock.record-health')->name('api.v1.animals.health-records.store');
     Route::post('/animals/{animal}/production-records', [AnimalController::class, 'recordProduction'])
         ->middleware('abilities:livestock.record-production')->name('api.v1.animals.production-records.store');
+
+    Route::middleware('abilities:livestock.view')->group(function () {
+        Route::get('/animal-batches', [AnimalBatchController::class, 'index'])->name('api.v1.animal-batches.index');
+        Route::get('/animal-batches/{animalBatch}', [AnimalBatchController::class, 'show'])->name('api.v1.animal-batches.show');
+    });
+    Route::post('/animal-batches', [AnimalBatchController::class, 'store'])
+        ->middleware('abilities:livestock.create')->name('api.v1.animal-batches.store');
+    Route::patch('/animal-batches/{animalBatch}', [AnimalBatchController::class, 'update'])
+        ->middleware('abilities:livestock.update')->name('api.v1.animal-batches.update');
+    Route::delete('/animal-batches/{animalBatch}', [AnimalBatchController::class, 'destroy'])
+        ->middleware('abilities:livestock.delete')->name('api.v1.animal-batches.destroy');
+    Route::post('/animal-batches/{animalBatch}/adjust-count', [AnimalBatchController::class, 'adjustCount'])
+        ->middleware('abilities:livestock.update')->name('api.v1.animal-batches.adjust-count');
 });

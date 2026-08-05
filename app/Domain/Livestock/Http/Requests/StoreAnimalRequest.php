@@ -24,6 +24,14 @@ class StoreAnimalRequest extends FormRequest
             'species' => ['required', 'string', 'max:100'],
             'breed' => ['nullable', 'string', 'max:100'],
             'sex' => ['nullable', Rule::in(['male', 'female'])],
+            'sire_id' => [
+                'nullable',
+                Rule::exists('animals', 'id')->where('company_id', $companyId)->where('sex', 'male'),
+            ],
+            'dam_id' => [
+                'nullable',
+                Rule::exists('animals', 'id')->where('company_id', $companyId)->where('sex', 'female'),
+            ],
             'date_of_birth' => ['nullable', 'date'],
             'acquired_on' => ['nullable', 'date'],
             'acquisition_cost' => ['nullable', 'numeric', 'min:0'],

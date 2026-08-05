@@ -24,6 +24,14 @@ class UpdateAnimalRequest extends FormRequest
             'species' => ['sometimes', 'string', 'max:100'],
             'breed' => ['nullable', 'string', 'max:100'],
             'sex' => ['nullable', Rule::in(['male', 'female'])],
+            'sire_id' => [
+                'nullable',
+                Rule::exists('animals', 'id')->where('company_id', $companyId)->where('sex', 'male'),
+            ],
+            'dam_id' => [
+                'nullable',
+                Rule::exists('animals', 'id')->where('company_id', $companyId)->where('sex', 'female'),
+            ],
             'date_of_birth' => ['nullable', 'date'],
             'status' => ['sometimes', Rule::in(Animal::STATUSES)],
             'acquired_on' => ['nullable', 'date'],

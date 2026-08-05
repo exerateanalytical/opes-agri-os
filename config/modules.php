@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Animal;
+use App\Models\AnimalBatch;
 use App\Models\BankAccount;
 use App\Models\BusinessDocument;
 use App\Models\Contact;
@@ -256,7 +257,7 @@ return [
         // No 'requires': a livestock-only business has no reason to switch
         // Farms on first — an animal's farm_id is optional.
         'groups' => ['livestock'],
-        'models' => [Animal::class],
+        'models' => [Animal::class, AnimalBatch::class],
     ],
 
     /*

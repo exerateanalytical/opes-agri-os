@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Animal;
+use App\Models\AnimalBatch;
 use App\Models\Artisan;
 use App\Models\BusinessDocument;
 use App\Models\Contact;
@@ -19,6 +20,7 @@ use App\Models\Receipt;
 use App\Models\Season;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Policies\AnimalBatchPolicy;
 use App\Policies\AnimalPolicy;
 use App\Policies\ArtisanPolicy;
 use App\Policies\BusinessDocumentPolicy;
@@ -64,6 +66,7 @@ class AuthServiceProvider extends ServiceProvider
         CropCycle::class => CropCyclePolicy::class,
         PurchaseOrder::class => PurchaseOrderPolicy::class,
         Animal::class => AnimalPolicy::class,
+        AnimalBatch::class => AnimalBatchPolicy::class,
     ];
 
     public function boot(): void

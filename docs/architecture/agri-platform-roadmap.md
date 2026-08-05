@@ -138,6 +138,15 @@ underlying question (how does something arrive on the books at zero cash cost):
   purchase) the way a `FixedAsset`'s does — deferred alongside the point above, since it's the same
   "something has a cost basis with nowhere to post it yet" shape.
 
-Not yet decided, flagged for V2's next milestone: breeding/genealogy (parent/offspring links) and
-poultry-specific batch tracking (a flock is usually recorded as a count, not individual animals) were
-both explicitly left out of V2 M1's registry-plus-health-plus-production scope.
+**V2 M2 shipped:** breeding/genealogy (`sire_id`/`dam_id` self-referencing links on `Animal`, validated
+against sex) and poultry-style batch tracking (`AnimalBatch` — a flock recorded as a running count via
+`App\Services\Livestock\BatchCountAdjuster`, not as individually tagged animals). `AnimalBatch` is
+deliberately its own model rather than `Animal` with a `quantity` column: an individually-tracked animal
+and a counted flock have almost no shared lifecycle (one gets tagged, health records and a genealogy;
+the other gets a running total adjusted up or down), so forcing them into one table would mean most
+columns are null for one side or the other.
+
+Not yet decided, flagged for a future V2 milestone: no accounting posting for a batch's mortality/loss
+(same shape as the harvest-valuation question above); no per-adjustment audit trail for batch counts,
+just the running total (promote to a ledger-style table if a business needs to reconstruct *when* losses
+happened, not just how many); no species-specific vaccination schedules or reminders.

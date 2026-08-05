@@ -33,6 +33,26 @@ class Animal extends Model
         return $this->belongsTo(Farm::class);
     }
 
+    public function sire(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'sire_id');
+    }
+
+    public function dam(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'dam_id');
+    }
+
+    public function offspringAsSire(): HasMany
+    {
+        return $this->hasMany(self::class, 'sire_id');
+    }
+
+    public function offspringAsDam(): HasMany
+    {
+        return $this->hasMany(self::class, 'dam_id');
+    }
+
     public function healthRecords(): HasMany
     {
         return $this->hasMany(AnimalHealthRecord::class);

@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\V1;
 use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
 use App\Models\Animal;
+use App\Models\AnimalBatch;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\CropCycle;
@@ -74,6 +75,8 @@ class AbilityEnforcementTest extends TestCase
 
     protected Animal $animal;
 
+    protected AnimalBatch $animalBatch;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -142,6 +145,10 @@ class AbilityEnforcementTest extends TestCase
         $this->purchaseOrder->lines()->create(['item_id' => $this->item->id, 'quantity' => 10, 'unit_cost' => 5]);
 
         $this->animal = Animal::create(['species' => 'Cattle', 'status' => 'active']);
+
+        $this->animalBatch = AnimalBatch::create([
+            'species' => 'Broiler', 'initial_count' => 10, 'current_count' => 10, 'status' => 'active',
+        ]);
     }
 
     /** @return array<int, array{method: string, uri: string}> */
@@ -201,6 +208,12 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'DELETE', 'uri' => "/api/v1/animals/{$this->animal->id}"],
             ['method' => 'POST', 'uri' => "/api/v1/animals/{$this->animal->id}/health-records"],
             ['method' => 'POST', 'uri' => "/api/v1/animals/{$this->animal->id}/production-records"],
+            ['method' => 'GET', 'uri' => '/api/v1/animal-batches'],
+            ['method' => 'POST', 'uri' => '/api/v1/animal-batches'],
+            ['method' => 'GET', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}"],
+            ['method' => 'DELETE', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}"],
+            ['method' => 'POST', 'uri' => "/api/v1/animal-batches/{$this->animalBatch->id}/adjust-count"],
         ];
     }
 

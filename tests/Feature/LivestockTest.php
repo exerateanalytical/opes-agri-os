@@ -6,6 +6,7 @@ use App\Livewire\Livestock\Index as LivestockIndex;
 use App\Livewire\Livestock\RecordHealth;
 use App\Livewire\Livestock\RecordProduction;
 use App\Models\Animal;
+use App\Models\AnimalBatch;
 use App\Models\Company;
 use App\Models\Item;
 use App\Models\Role;
@@ -98,5 +99,54 @@ class LivestockTest extends TestCase
         $this->company->forceFill(['modules' => ['livestock' => false]])->save();
 
         Livewire::actingAs($this->owner)->test(LivestockIndex::class)->assertForbidden();
+    }
+
+    public function test_an_animal_records_its_sire_and_dam(): void
+    {
+        $sire = Animal::create(['species' => 'Cattle', 'sex' => 'male', 'status' => 'active']);
+        $dam = Animal::create(['species' => 'Cattle', 'sex' => 'female', 'status' => 'active']);
+
+        Livewire::actingAs($this->owner)
+            ->test(LivestockIndex::class)
+            ->call('startAdding')
+            ->set('species', 'Cattle')
+            ->set('sireId', $sire->id)
+            ->set('damId', $dam->id)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $calf = Animal::query()->where('company_id', $this->company->id)->where('species', 'Cattle')
+            ->whereNotIn('id', [$sire->id, $dam->id])->sole();
+        $this->assertSame($sire->id, $calf->sire_id);
+        $this->assertSame($dam->id, $calf->dam_id);
+    }
+
+    public function test_it_creates_a_batch_and_adjusts_its_count(): void
+    {
+        $component = Livewire::actingAs($this->owner)
+            ->test(LivestockIndex::class)
+            ->call('startAddingBatch')
+            ->set('batchSpecies', 'Broiler')
+            ->set('batchInitialCount', '200')
+            ->call('saveBatch')
+            ->assertHasNoErrors();
+
+        $batch = AnimalBatch::query()->where('company_id', $this->company->id)->sole();
+        $this->assertSame(200, $batch->current_count);
+
+        $component->call('adjustBatchCount', $batch->id, -20);
+        $this->assertSame(180, $batch->fresh()->current_count);
+    }
+
+    public function test_a_batch_count_cannot_go_below_zero(): void
+    {
+        $batch = AnimalBatch::create(['species' => 'Broiler', 'initial_count' => 5, 'current_count' => 5, 'status' => 'active']);
+
+        Livewire::actingAs($this->owner)
+            ->test(LivestockIndex::class)
+            ->call('adjustBatchCount', $batch->id, -10)
+            ->assertHasErrors('batch');
+
+        $this->assertSame(5, $batch->fresh()->current_count);
     }
 }
