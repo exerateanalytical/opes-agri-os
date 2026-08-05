@@ -53,6 +53,18 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         /*
+         * The generated API docs (`/docs/api`) are a product surface, not an
+         * internal tool — Scramble's own RestrictedDocsAccess middleware
+         * defaults to local-only otherwise, which would hide them from the
+         * partners/integrators they exist for. The nullable, defaulted
+         * parameter is required: Laravel's Gate only treats a callback as
+         * guest-allowed when its first parameter is explicitly nullable
+         * (Gate::callbackAllowsGuests) — a zero-parameter closure does not
+         * qualify and would deny every unauthenticated visitor.
+         */
+        Gate::define('viewApiDocs', fn (?User $user = null) => true);
+
+        /*
          * A gate per catalogued permission, named after it. Model-backed checks
          * go through the policies above; these cover the page-level abilities
          * with no model behind them ("can this user open Reports at all") and
