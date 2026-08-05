@@ -263,6 +263,22 @@ class DocumentConverter
         }
 
         return DB::transaction(function () use ($document, $user, $reason) {
+            // Re-read under a row lock: a payment recorded between the checks
+            // above and this transaction opening must not be voided out from
+            // under it — see PaymentRecorder::record() for the same guard on
+            // the other side of this race.
+            $document = Document::query()->lockForUpdate()->findOrFail($document->getKey());
+
+            if ($document->status === DocumentStatus::Void) {
+                throw new RuntimeException('This document is already void.');
+            }
+
+            if ((float) $document->amount_paid > 0) {
+                throw new RuntimeException(
+                    'This document has payments against it. Refund or reallocate them before voiding.'
+                );
+            }
+
             $document->forceFill([
                 'status' => DocumentStatus::Void,
                 'balance' => 0,

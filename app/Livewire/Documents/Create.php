@@ -5,12 +5,14 @@ namespace App\Livewire\Documents;
 use App\Domain\Sales\Actions\CreateDraftDocumentAction;
 use App\Enums\DocumentType;
 use App\Models\Contact;
+use App\Models\Item;
 use App\Services\DocumentIssuer;
 use App\Support\CurrentCompany;
 use App\Support\Vat;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use RuntimeException;
@@ -114,12 +116,15 @@ class Create extends Component
             ->values()
             ->all();
 
+        $companyId = app(CurrentCompany::class)->id();
+
         $validator = validator($payload, [
             'contact_id' => ['required', 'string'],
             'issue_date' => ['required', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:issue_date'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'lines' => ['required', 'array', 'min:1'],
+            'lines.*.item_id' => ['nullable', 'string', Rule::exists('items', 'id')->where('company_id', $companyId)],
             'lines.*.description' => ['required', 'string', 'max:255'],
             'lines.*.quantity' => ['required', 'numeric', 'gt:0'],
             'lines.*.unit_price' => ['required', 'numeric', 'gte:0'],
@@ -166,6 +171,10 @@ class Create extends Component
         return view('livewire.documents.create', [
             'docType' => $docType,
             'currency' => $company?->currency ?? 'USD',
+            // Optional per-line link to the catalogue, so a sale of a tracked
+            // item can move stock — see StockLedger::move(). Free-text lines
+            // (services, one-offs) are left with no item, same as before.
+            'items' => Item::query()->orderBy('name')->get(['id', 'name']),
             // The composer computes its own totals so it works with no signal,
             // and an offline-issued invoice is still handed to a customer — so
             // the client needs the same tax settings the server applies, or the

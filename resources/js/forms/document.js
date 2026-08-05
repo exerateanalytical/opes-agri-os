@@ -15,6 +15,7 @@ export default function documentForm(config) {
         docLabel: config.docLabel,
         entityType: config.entityType,
         canIssueOffline: config.canIssueOffline,
+        items: config.items ?? [],
 
         contactId: null,
         contact: null,
@@ -47,11 +48,21 @@ export default function documentForm(config) {
         },
 
         blankLine() {
-            return { description: '', quantity: '1', unit_price: '' };
+            return { item_id: '', description: '', quantity: '1', unit_price: '' };
         },
 
         addLine() {
             this.lines.push(this.blankLine());
+        },
+
+        /** Picking a catalogue item fills in a description, if the row has none yet. */
+        onItemSelected(index) {
+            const line = this.lines[index];
+            const item = this.items.find((opt) => opt.id === line.item_id);
+
+            if (item && ! line.description.trim()) {
+                line.description = item.name;
+            }
         },
 
         removeLine(index) {
@@ -231,6 +242,7 @@ export default function documentForm(config) {
                 due_date: this.dueDate || null,
                 notes: this.notes,
                 lines: this.lines.map((line) => ({
+                    item_id: line.item_id || null,
                     description: line.description,
                     quantity: line.quantity,
                     unit_price: line.unit_price,
@@ -374,6 +386,7 @@ export default function documentForm(config) {
             }
 
             const lines = this.lines.map((line, index) => ({
+                item_id: line.item_id || null,
                 description: String(line.description).trim(),
                 quantity: parseFloat(line.quantity),
                 unit: 'unit',

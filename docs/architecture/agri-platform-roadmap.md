@@ -313,6 +313,33 @@ correct behaviour — no code change needed, only choosing sensible values on th
 genuine gap surfaces later (poultry-specific batch mortality causes, apiary inspection checklists,
 silvicultural rotation schedules), that gap gets its own milestone then, not speculative schema now.
 
+**2026-08-05 — Hardening: Core Sales/Invoicing audit fixes.** A read-only audit of the Core Sales/Invoicing
+module found three confirmed defects, fixed here:
+
+- `DocumentIssuer::issue()` checked the draft status against a possibly-stale in-memory model *before*
+  its transaction opened, and never re-read the row under a lock inside it — two concurrent requests
+  issuing the same draft could both pass the check and both issue. It now re-fetches with
+  `lockForUpdate()` and re-checks the status inside the transaction, the same pattern
+  `PaymentRecorder::record()` already used for the identical race.
+- `DocumentConverter::void()` had the same shape of bug against `amount_paid`: a payment recorded between
+  the check and the save was invisible to it, so a paid invoice could still be voided. Same fix, same
+  pattern.
+- Sales lines never carried `item_id` through any production path — `StoreDocumentRequest`,
+  `CreateDraftDocumentAction::normalisedLines()`, and the `Documents/Create` composer all dropped it, so
+  `StockLedger::move()` (which only acts on lines with an `item`) never fired on a real invoice. `item_id`
+  is now an optional, company-scoped validated field threaded through the store request, the draft action,
+  and the web composer (an item picker per line, filling the description on selection); a document issued
+  through the real API/`DocumentIssuer` path with a tracked-item line now writes a `StockMovement` and
+  decrements stock. The `document_lines.item_id` column already existed unused — no migration needed.
+- Also fixed as a cheap adjacent bug: `DocumentController::update`'s `due_date` rule compared only against
+  a same-request `issue_date`, so a PATCH sending `due_date` alone could be rejected (or wrongly accepted)
+  against nothing rather than the document's stored `issue_date`. It now falls back to the stored value
+  when the request doesn't include one.
+- Left alone, on purpose: `StockLedger::move()`/`reverseSale()` still write a negative-stock movement
+  without checking availability first. No precedent search turned up an existing business rule either way
+  for sales (unlike stock *transfers*, which do refuse a shortage — see `StockLocationsTest`), so adding
+  one here would be inventing policy the audit didn't ask for; flagged for whoever scopes that decision.
+
 ## 5. Documentation approach
 
 Per-module specs are written **just before that module is built**, not all up front — this doc stays short

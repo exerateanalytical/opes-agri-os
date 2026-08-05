@@ -74,6 +74,74 @@ class DocumentLifecycleTest extends TestCase
         return app(DocumentIssuer::class)->issue($document, $this->user);
     }
 
+    /*
+     * DocumentIssuer::issue() used to check the draft status before the
+     * transaction opened, against whatever copy of the model the caller
+     * happened to be holding, and never re-read the row under a lock inside
+     * it — so two requests issuing the same draft at once could both pass the
+     * check and both issue, minting two numbers for one document. Mirrors
+     * SecurityAuditRegressionTest's stale-read style for the same class of
+     * race in LoyaltyLedger.
+     */
+    public function test_two_concurrent_issues_of_the_same_draft_do_not_both_succeed(): void
+    {
+        $document = Document::create([
+            'type' => DocumentType::Invoice,
+            'contact_id' => $this->contact->id,
+            'status' => DocumentStatus::Draft,
+            'issue_date' => now()->toDateString(),
+            'currency' => 'USD',
+            'subtotal' => 100,
+            'total' => 100,
+            'balance' => 100,
+        ]);
+
+        DocumentLine::create([
+            'document_id' => $document->id,
+            'description' => 'Item',
+            'quantity' => 1,
+            'unit_price' => 100,
+            'line_total' => 100,
+        ]);
+
+        // The stale-read case the pre-check outside the transaction cannot
+        // catch: a second caller holding a copy of the document from before
+        // the first issue.
+        $stale = Document::find($document->id);
+
+        app(DocumentIssuer::class)->issue($document->fresh(), $this->user);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/already issued/');
+
+        try {
+            app(DocumentIssuer::class)->issue($stale, $this->user);
+        } finally {
+            // Exactly one number was minted, not two.
+            $this->assertSame(1, Document::query()->whereNotNull('number')->count());
+        }
+    }
+
+    /*
+     * DocumentConverter::void() had the same shape of bug: it read the
+     * document, checked amount_paid, then saved — with no row lock, a payment
+     * recorded between the check and the save is invisible to it, so a paid
+     * invoice could still be voided.
+     */
+    public function test_a_payment_recorded_between_the_check_and_the_lock_still_blocks_voiding(): void
+    {
+        $invoice = $this->issued(DocumentType::Invoice, 400);
+
+        $stale = Document::find($invoice->id);
+
+        app(PaymentRecorder::class)->record($invoice->fresh(), $this->user, 100.0, PaymentMethod::Cash);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/payments against it/');
+
+        app(DocumentConverter::class)->void($stale, $this->user);
+    }
+
     public function test_a_quotation_converts_into_an_issued_invoice(): void
     {
         $quotation = $this->issued(DocumentType::Quotation, 400);

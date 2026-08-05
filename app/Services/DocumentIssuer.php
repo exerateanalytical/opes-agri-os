@@ -42,6 +42,25 @@ class DocumentIssuer
         }
 
         return DB::transaction(function () use ($document, $user, $number) {
+            // Re-read under a row lock: two requests issuing the same draft at
+            // once must not both pass the draft check on stale data — see
+            // PaymentRecorder::record() for the same guard against the same
+            // race. wasRecentlyCreated is copied across the refetch — a
+            // brand-new draft issued in the same breath it was created (see
+            // DocumentConverter::convert()) must still report itself as
+            // created, which a fresh model instance from the query would not.
+            $wasRecentlyCreated = $document->wasRecentlyCreated;
+            $document = Document::query()->lockForUpdate()->findOrFail($document->getKey());
+            $document->wasRecentlyCreated = $wasRecentlyCreated;
+
+            if ($document->status !== DocumentStatus::Draft) {
+                throw new RuntimeException(sprintf(
+                    'Document %s is already %s and cannot be issued again.',
+                    $document->number ?? $document->id,
+                    $document->status->value,
+                ));
+            }
+
             $document->issue_date ??= now()->toDateString();
             $document->number ??= $number ?? $this->numbers->next($document->type);
             $document->status = DocumentStatus::Issued;

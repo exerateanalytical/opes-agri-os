@@ -32,6 +32,10 @@ class StoreDocumentRequest extends FormRequest
             'due_date' => ['nullable', 'date', 'after_or_equal:issue_date'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'lines' => ['required', 'array', 'min:1'],
+            'lines.*.item_id' => [
+                'nullable', 'string',
+                Rule::exists('items', 'id')->where('company_id', app(CurrentCompany::class)->id()),
+            ],
             'lines.*.description' => ['required', 'string', 'max:255'],
             'lines.*.quantity' => ['required', 'numeric', 'gt:0'],
             'lines.*.unit_price' => ['required', 'numeric', 'gte:0'],

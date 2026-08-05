@@ -25,7 +25,7 @@ use RuntimeException;
 class CreateDraftDocumentAction
 {
     /**
-     * @param  array{contact_id: string, issue_date: string, due_date?: ?string, notes?: ?string, lines: array<int, array{description: string, quantity: float|string, unit_price: float|string}>}  $data
+     * @param  array{contact_id: string, issue_date: string, due_date?: ?string, notes?: ?string, lines: array<int, array{item_id?: ?string, description: string, quantity: float|string, unit_price: float|string}>}  $data
      */
     public function create(Company $company, User $user, DocumentType $type, array $data): Document
     {
@@ -78,6 +78,7 @@ class CreateDraftDocumentAction
     {
         return collect($lines)
             ->map(fn (array $line, int $index) => [
+                'item_id' => $line['item_id'] ?? null,
                 'description' => trim((string) $line['description']),
                 'quantity' => (float) $line['quantity'],
                 // Always stored net of tax, whichever way it was keyed, so a

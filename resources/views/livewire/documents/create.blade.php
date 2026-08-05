@@ -12,6 +12,7 @@
         canIssueOffline: @js($canIssueOffline),
         today: @js(now()->toDateString()),
         defaultDue: @js(now()->addDays(14)->toDateString()),
+        items: @js($items->map(fn ($item) => ['id' => $item->id, 'name' => $item->name])),
      })">
 
     {{-- Header --}}
@@ -147,6 +148,19 @@
                                  could not find when the save came back asking
                                  for a "description" — a word that then appeared
                                  nowhere on the screen. --}}
+                            <template x-if="items.length">
+                                <label class="mb-2 block">
+                                    <span class="mb-1 block text-[11.5px] font-medium uppercase tracking-wide text-faint">Item <span class="font-normal text-faint">(optional — links to stock)</span></span>
+                                    <select x-model="line.item_id" @change="onItemSelected(index)"
+                                            class="h-11 w-full rounded-lg border border-border bg-surface px-3.5 text-[14.5px] text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20">
+                                        <option value="">Free text — not from the catalogue</option>
+                                        <template x-for="opt in items" :key="opt.id">
+                                            <option :value="opt.id" x-text="opt.name"></option>
+                                        </template>
+                                    </select>
+                                </label>
+                            </template>
+
                             <div class="flex items-end gap-2">
                                 <label class="min-w-0 flex-1">
                                     <span class="mb-1 block text-[11.5px] font-medium uppercase tracking-wide text-faint">Description</span>
