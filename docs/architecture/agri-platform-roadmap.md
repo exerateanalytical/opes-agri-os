@@ -145,9 +145,10 @@ question to resolve this time. Deliberately out of this milestone: weighted voti
 vote here — share-weighted or patronage-weighted voting is a different rule a cooperative's bylaws would
 have to specify), and quorum enforcement blocking a vote from opening (a vote can currently open and
 close regardless of whether its associated meeting hit quorum — the flag is informational, not a gate,
-until a real workflow asks for one). This milestone shipped API-first only, without a Livewire screen —
-consistent with the "provisioned for mobile" discipline (§2), but a gap worth closing before this module
-is offered to a business through the web app, not just through the API.
+until a real workflow asks for one). Shipped API-first, with a Livewire screen added in a follow-up
+pass — `Meetings` and `Votes` tabs alongside `Members`/`Loans` on the existing Cooperative page, using
+the same modal-form pattern (`RecordContribution`) established for lifecycle actions elsewhere in this
+module.
 
 **Later, unscheduled:** Fisheries, Beekeeping, Forestry, Greenhouse, Nursery & Seed, Soil & Fertility,
 Irrigation, Machinery & Equipment, Utility Management, Fleet & Logistics, Supply Chain & Traceability,

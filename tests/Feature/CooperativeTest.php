@@ -6,7 +6,9 @@ use App\Livewire\Cooperative\Index as CooperativeIndex;
 use App\Livewire\Cooperative\RecordContribution;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\CooperativeMeeting;
 use App\Models\CooperativeMember;
+use App\Models\CooperativeVote;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\CurrentCompany;
@@ -80,5 +82,54 @@ class CooperativeTest extends TestCase
         $this->company->forceFill(['modules' => ['cooperative' => false]])->save();
 
         Livewire::actingAs($this->owner)->test(CooperativeIndex::class)->assertForbidden();
+    }
+
+    public function test_it_creates_a_meeting_and_marks_attendance(): void
+    {
+        $member = CooperativeMember::create(['contact_id' => $this->contact->id, 'status' => 'active']);
+
+        $component = Livewire::actingAs($this->owner)
+            ->test(CooperativeIndex::class)
+            ->call('startAddingMeeting')
+            ->set('meetingTitle', 'AGM')
+            ->set('meetingScheduledOn', '2026-09-01')
+            ->set('meetingQuorumRequired', '1')
+            ->call('saveMeeting')
+            ->assertHasNoErrors();
+
+        $meeting = CooperativeMeeting::query()->where('company_id', $this->company->id)->sole();
+        $this->assertFalse($meeting->quorumMet());
+
+        $component->call('openAttendance', $meeting->id)
+            ->set('attendanceMemberId', $member->id)
+            ->call('saveAttendance')
+            ->assertHasNoErrors();
+
+        $this->assertTrue($meeting->fresh()->quorumMet());
+    }
+
+    public function test_it_opens_a_vote_and_casts_a_ballot(): void
+    {
+        $member = CooperativeMember::create(['contact_id' => $this->contact->id, 'status' => 'active']);
+
+        $component = Livewire::actingAs($this->owner)
+            ->test(CooperativeIndex::class)
+            ->call('startAddingVote')
+            ->set('voteTitle', 'Approve the new bylaws')
+            ->call('saveVote')
+            ->assertHasNoErrors();
+
+        $vote = CooperativeVote::query()->where('company_id', $this->company->id)->sole();
+
+        $component->call('openBallot', $vote->id)
+            ->set('ballotMemberId', $member->id)
+            ->set('ballotChoice', 'for')
+            ->call('saveBallot')
+            ->assertHasNoErrors();
+
+        $this->assertSame(1, $vote->fresh()->tally()['for']);
+
+        $component->call('closeVote', $vote->id);
+        $this->assertSame('closed', $vote->fresh()->status);
     }
 }

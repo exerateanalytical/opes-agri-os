@@ -4,7 +4,9 @@ namespace App\Livewire\Cooperative;
 
 use App\Enums\PaymentMethod;
 use App\Models\Contact;
+use App\Models\CooperativeMeeting;
 use App\Models\CooperativeMember;
+use App\Models\CooperativeVote;
 use App\Models\Loan;
 use App\Services\Cooperative\LoanDisburser;
 use App\Services\Cooperative\LoanRepaymentRecorder;
@@ -17,17 +19,17 @@ use Livewire\Component;
 use RuntimeException;
 
 /**
- * Members and loans in one module page — following the Farms `Index.php`
- * tabbed precedent. Contribution and repayment recording are their own
- * components/actions with their own validation shapes, same reasoning as
- * Crops' RecordHarvest.
+ * Members, loans, meetings and votes in one module page — following the
+ * Farms `Index.php` tabbed precedent. Contribution and repayment recording
+ * are their own components/actions with their own validation shapes, same
+ * reasoning as Crops' RecordHarvest.
  */
 class Index extends Component
 {
     use AuthorizesRequests;
 
     #[Url]
-    public string $tab = 'members'; // members|loans
+    public string $tab = 'members'; // members|loans|meetings|votes
 
     #[Url]
     public string $statusFilter = '';
@@ -64,6 +66,38 @@ class Index extends Component
     public string $repaymentAmount = '';
 
     public string $repaymentMethod = 'cash';
+
+    // ── Meeting form ────────────────────────────────────────────────────
+    public bool $addingMeeting = false;
+
+    public string $meetingTitle = '';
+
+    public string $meetingScheduledOn = '';
+
+    public string $meetingQuorumRequired = '0';
+
+    public string $meetingNotes = '';
+
+    // ── Attendance ──────────────────────────────────────────────────────
+    public ?string $markingAttendanceMeetingId = null;
+
+    public string $attendanceMemberId = '';
+
+    // ── Vote form ───────────────────────────────────────────────────────
+    public bool $addingVote = false;
+
+    public string $voteMeetingId = '';
+
+    public string $voteTitle = '';
+
+    public string $voteDescription = '';
+
+    // ── Ballot ──────────────────────────────────────────────────────────
+    public ?string $ballotingVoteId = null;
+
+    public string $ballotMemberId = '';
+
+    public string $ballotChoice = 'for';
 
     public function mount(): void
     {
@@ -219,6 +253,144 @@ class Index extends Component
         $this->repayingLoanId = null;
     }
 
+    public function startAddingMeeting(): void
+    {
+        $this->authorize('create', CooperativeMeeting::class);
+        $this->reset(['meetingTitle', 'meetingScheduledOn', 'meetingNotes']);
+        $this->meetingQuorumRequired = '0';
+        $this->addingMeeting = true;
+    }
+
+    public function saveMeeting(): void
+    {
+        $this->authorize('create', CooperativeMeeting::class);
+
+        $data = $this->validate([
+            'meetingTitle' => ['required', 'string', 'max:255'],
+            'meetingScheduledOn' => ['required', 'date'],
+            'meetingQuorumRequired' => ['nullable', 'integer', 'min:0'],
+            'meetingNotes' => ['nullable', 'string'],
+        ]);
+
+        CooperativeMeeting::create([
+            'title' => $data['meetingTitle'],
+            'scheduled_on' => $data['meetingScheduledOn'],
+            'quorum_required' => $data['meetingQuorumRequired'] !== '' ? $data['meetingQuorumRequired'] : 0,
+            'notes' => $data['meetingNotes'] ?: null,
+            'status' => 'scheduled',
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->reset(['meetingTitle', 'meetingScheduledOn', 'meetingNotes']);
+        $this->meetingQuorumRequired = '0';
+        $this->addingMeeting = false;
+    }
+
+    public function openAttendance(string $meetingId): void
+    {
+        $meeting = CooperativeMeeting::findOrFail($meetingId);
+        $this->authorize('recordAttendance', $meeting);
+
+        $this->markingAttendanceMeetingId = $meeting->id;
+        $this->attendanceMemberId = '';
+    }
+
+    public function closeAttendance(): void
+    {
+        $this->markingAttendanceMeetingId = null;
+    }
+
+    public function saveAttendance(): void
+    {
+        $data = $this->validate([
+            'attendanceMemberId' => ['required', 'exists:cooperative_members,id'],
+        ]);
+
+        $meeting = CooperativeMeeting::findOrFail($this->markingAttendanceMeetingId);
+        $this->authorize('recordAttendance', $meeting);
+
+        $meeting->attendances()->firstOrCreate(['cooperative_member_id' => $data['attendanceMemberId']]);
+
+        $this->attendanceMemberId = '';
+    }
+
+    public function startAddingVote(): void
+    {
+        $this->authorize('create', CooperativeVote::class);
+        $this->reset(['voteMeetingId', 'voteTitle', 'voteDescription']);
+        $this->addingVote = true;
+    }
+
+    public function saveVote(): void
+    {
+        $this->authorize('create', CooperativeVote::class);
+
+        $data = $this->validate([
+            'voteMeetingId' => ['nullable', 'exists:cooperative_meetings,id'],
+            'voteTitle' => ['required', 'string', 'max:255'],
+            'voteDescription' => ['nullable', 'string'],
+        ]);
+
+        CooperativeVote::create([
+            'cooperative_meeting_id' => $data['voteMeetingId'] ?: null,
+            'title' => $data['voteTitle'],
+            'description' => $data['voteDescription'] ?: null,
+            'opened_on' => now()->toDateString(),
+            'status' => 'open',
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->reset(['voteMeetingId', 'voteTitle', 'voteDescription']);
+        $this->addingVote = false;
+    }
+
+    public function closeVote(string $voteId): void
+    {
+        $vote = CooperativeVote::findOrFail($voteId);
+        $this->authorize('update', $vote);
+
+        $vote->update(['status' => 'closed', 'closed_on' => now()->toDateString()]);
+    }
+
+    public function openBallot(string $voteId): void
+    {
+        $vote = CooperativeVote::findOrFail($voteId);
+        $this->authorize('castVote', $vote);
+
+        $this->ballotingVoteId = $vote->id;
+        $this->ballotMemberId = '';
+        $this->ballotChoice = 'for';
+    }
+
+    public function closeBallot(): void
+    {
+        $this->ballotingVoteId = null;
+    }
+
+    public function saveBallot(): void
+    {
+        $data = $this->validate([
+            'ballotMemberId' => ['required', 'exists:cooperative_members,id'],
+            'ballotChoice' => ['required', 'in:'.implode(',', CooperativeVote::CHOICES)],
+        ]);
+
+        $vote = CooperativeVote::findOrFail($this->ballotingVoteId);
+        $this->authorize('castVote', $vote);
+
+        if ($vote->status !== 'open') {
+            $this->addError('ballotMemberId', 'This vote is closed.');
+
+            return;
+        }
+
+        $vote->ballots()->firstOrCreate(
+            ['cooperative_member_id' => $data['ballotMemberId']],
+            ['choice' => $data['ballotChoice']],
+        );
+
+        $this->ballotMemberId = '';
+    }
+
     /** No-op body — Livewire re-renders the list on any listened event. */
     #[On('contribution-recorded')]
     public function refreshAfterContribution(): void {}
@@ -237,9 +409,21 @@ class Index extends Component
             ->orderByDesc('id')
             ->get();
 
+        $meetings = CooperativeMeeting::query()
+            ->withCount('attendances')
+            ->orderByDesc('id')
+            ->get();
+
+        $votes = CooperativeVote::query()
+            ->with('meeting')
+            ->orderByDesc('id')
+            ->get();
+
         return view('livewire.cooperative.index', [
             'members' => $members,
             'loans' => $loans,
+            'meetings' => $meetings,
+            'votes' => $votes,
             'contacts' => Contact::query()->orderBy('name')->get(),
             'coopMembers' => CooperativeMember::query()->with('contact')->orderBy('id')->get(),
         ])->layout('components.layouts.app', ['title' => 'Cooperative', 'active' => 'cooperative']);
