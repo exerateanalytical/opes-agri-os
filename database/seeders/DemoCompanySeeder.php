@@ -356,13 +356,13 @@ class DemoCompanySeeder extends Seeder
             'total' => 30000,
             'amount_paid' => 0,
             'balance' => 30000,
-            'notes' => 'Annual subscription — OPES AGRI OS (Opes Business 360).',
+            'notes' => 'Annual subscription — OPES AGRI OS.',
             'created_by' => $this->owner->id,
         ]);
 
         DocumentLine::create([
             'document_id' => $invoice->id,
-            'description' => 'OPES AGRI OS (Opes Business 360) — Annual Subscription',
+            'description' => 'OPES AGRI OS — Annual Subscription',
             'quantity' => 1,
             'unit' => 'unit',
             'unit_price' => 30000,
