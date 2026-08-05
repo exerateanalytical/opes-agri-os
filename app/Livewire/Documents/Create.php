@@ -2,20 +2,18 @@
 
 namespace App\Livewire\Documents;
 
-use App\Enums\DocumentStatus;
+use App\Domain\Sales\Actions\CreateDraftDocumentAction;
 use App\Enums\DocumentType;
 use App\Models\Contact;
-use App\Models\Document;
-use App\Models\DocumentLine;
 use App\Services\DocumentIssuer;
 use App\Support\CurrentCompany;
 use App\Support\Vat;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use RuntimeException;
 
 /**
  * The document composer.
@@ -139,52 +137,18 @@ class Create extends Component
         }
 
         $data = $validator->validated();
-
-        // Scoped lookup: a contact id from another company fails here rather
-        // than silently attaching someone else's customer.
-        $contact = Contact::query()->find($data['contact_id']);
-
-        if ($contact === null) {
-            return ['ok' => false, 'errors' => ['contact_id' => ['That customer no longer exists.']]];
-        }
-
         $company = app(CurrentCompany::class)->get();
 
-        // TVA is computed once, here, and the per-line figures come back from
-        // the same pass that produced the totals — so the tax column on the
-        // printed sheet always sums to the tax line beneath it.
-        $vat = Vat::forCompany($company, $data['lines']);
-        $lines = $this->normalisedLines($data['lines'], $vat['lines']);
+        try {
+            $document = app(CreateDraftDocumentAction::class)
+                ->create($company, auth()->user(), DocumentType::from($this->type), $data);
+        } catch (RuntimeException $e) {
+            return ['ok' => false, 'errors' => ['contact_id' => [$e->getMessage()]]];
+        }
 
-        $document = DB::transaction(function () use ($contact, $company, $lines, $vat, $data, $issue) {
-            $document = Document::create([
-                'type' => $this->type,
-                'contact_id' => $contact->id,
-                'status' => DocumentStatus::Draft,
-                'issue_date' => $data['issue_date'],
-                'due_date' => $data['due_date'] ?? null,
-                'currency' => $company->currency,
-                'subtotal' => $vat['subtotal'],
-                'tax_total' => $vat['tax_total'],
-                'total' => $vat['total'],
-                'amount_paid' => 0,
-                'balance' => $vat['total'],
-                'notes' => $data['notes'] ?: null,
-                'created_by' => auth()->id(),
-            ]);
-
-            foreach ($lines as $index => $line) {
-                DocumentLine::create($line + [
-                    'document_id' => $document->id,
-                    'unit' => 'unit',
-                    'sort_order' => $index,
-                ]);
-            }
-
-            return $issue
-                ? app(DocumentIssuer::class)->issue($document, auth()->user())
-                : $document;
-        });
+        if ($issue) {
+            $document = app(DocumentIssuer::class)->issue($document, auth()->user());
+        }
 
         return [
             'ok' => true,
@@ -192,28 +156,6 @@ class Create extends Component
             'number' => $document->number,
             'redirect' => route('documents.show', $document),
         ];
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $lines
-     * @param  array<int, array{net: float, tax: float, gross: float, unit_net: float}>  $taxed
-     * @return array<int, array<string, mixed>>
-     */
-    protected function normalisedLines(array $lines, array $taxed): array
-    {
-        return collect($lines)
-            ->map(fn (array $line, int $index) => [
-                'description' => trim((string) $line['description']),
-                'quantity' => (float) $line['quantity'],
-                // Always stored net of tax, whichever way it was keyed, so a
-                // line means the same thing on every document regardless of
-                // whether the business quotes HT or TTC.
-                'unit_price' => $taxed[$index]['unit_net'] ?? (float) $line['unit_price'],
-                'tax_amount' => $taxed[$index]['tax'] ?? 0.0,
-                'line_total' => $taxed[$index]['net'] ?? 0.0,
-            ])
-            ->values()
-            ->all();
     }
 
     public function render(): View

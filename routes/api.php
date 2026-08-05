@@ -1,6 +1,8 @@
 <?php
 
 use App\Domain\Sales\Http\Controllers\Api\V1\ContactController;
+use App\Domain\Sales\Http\Controllers\Api\V1\DocumentController;
+use App\Domain\Sales\Http\Controllers\Api\V1\DocumentLifecycleController;
 use App\Domain\Sales\Http\Controllers\Api\V1\ItemController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -49,4 +51,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:products.update')->name('api.v1.items.update');
     Route::delete('/items/{item}', [ItemController::class, 'destroy'])
         ->middleware('abilities:products.delete')->name('api.v1.items.destroy');
+
+    Route::middleware('abilities:sales.view')->group(function () {
+        Route::get('/documents', [DocumentController::class, 'index'])->name('api.v1.documents.index');
+        Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('api.v1.documents.show');
+    });
+    Route::post('/documents', [DocumentController::class, 'store'])
+        ->middleware('abilities:sales.create')->name('api.v1.documents.store');
+    Route::patch('/documents/{document}', [DocumentController::class, 'update'])
+        ->middleware('abilities:sales.update')->name('api.v1.documents.update');
+    Route::post('/documents/{document}/issue', [DocumentLifecycleController::class, 'issue'])
+        ->middleware('abilities:sales.issue')->name('api.v1.documents.issue');
+    Route::post('/documents/{document}/void', [DocumentLifecycleController::class, 'void'])
+        ->middleware('abilities:sales.void')->name('api.v1.documents.void');
+    Route::post('/documents/{document}/convert', [DocumentLifecycleController::class, 'convert'])
+        ->middleware('abilities:sales.create')->name('api.v1.documents.convert');
 });
