@@ -17,6 +17,7 @@ use App\Domain\Sales\Http\Controllers\Api\V1\DocumentController;
 use App\Domain\Sales\Http\Controllers\Api\V1\DocumentLifecycleController;
 use App\Domain\Sales\Http\Controllers\Api\V1\ItemController;
 use App\Domain\Sales\Http\Controllers\Api\V1\PaymentController;
+use App\Domain\Utilities\Http\Controllers\Api\V1\UtilityAccountController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -217,4 +218,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'api.company', 'throttle:api'])
         ->middleware('abilities:assets.view')->name('api.v1.fixed-assets.maintenance-records.index');
     Route::post('/fixed-assets/{fixedAsset}/maintenance-records', [AssetMaintenanceRecordController::class, 'store'])
         ->middleware('abilities:assets.record-maintenance')->name('api.v1.fixed-assets.maintenance-records.store');
+
+    Route::middleware('abilities:utilities.view')->group(function () {
+        Route::get('/utility-accounts', [UtilityAccountController::class, 'index'])->name('api.v1.utility-accounts.index');
+        Route::get('/utility-accounts/{utilityAccount}', [UtilityAccountController::class, 'show'])->name('api.v1.utility-accounts.show');
+        Route::get('/utility-accounts/{utilityAccount}/readings', [UtilityAccountController::class, 'readings'])->name('api.v1.utility-accounts.readings.index');
+    });
+    Route::post('/utility-accounts', [UtilityAccountController::class, 'store'])
+        ->middleware('abilities:utilities.create')->name('api.v1.utility-accounts.store');
+    Route::patch('/utility-accounts/{utilityAccount}', [UtilityAccountController::class, 'update'])
+        ->middleware('abilities:utilities.update')->name('api.v1.utility-accounts.update');
+    Route::delete('/utility-accounts/{utilityAccount}', [UtilityAccountController::class, 'destroy'])
+        ->middleware('abilities:utilities.delete')->name('api.v1.utility-accounts.destroy');
+    Route::post('/utility-accounts/{utilityAccount}/readings', [UtilityAccountController::class, 'recordReading'])
+        ->middleware('abilities:utilities.record-reading')->name('api.v1.utility-accounts.readings.store');
 });

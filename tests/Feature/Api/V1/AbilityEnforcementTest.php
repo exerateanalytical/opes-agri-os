@@ -24,6 +24,7 @@ use App\Models\PurchaseOrder;
 use App\Models\Role;
 use App\Models\Season;
 use App\Models\User;
+use App\Models\UtilityAccount;
 use App\Services\ApiTokenIssuer;
 use App\Support\CurrentCompany;
 use App\Support\Permissions;
@@ -91,6 +92,8 @@ class AbilityEnforcementTest extends TestCase
     protected CooperativeVote $cooperativeVote;
 
     protected FixedAsset $fixedAsset;
+
+    protected UtilityAccount $utilityAccount;
 
     protected function setUp(): void
     {
@@ -190,6 +193,8 @@ class AbilityEnforcementTest extends TestCase
             'cost' => 8000000, 'residual_value' => 0, 'method' => 'straight_line',
             'useful_life_months' => 48, 'status' => 'active',
         ]);
+
+        $this->utilityAccount = UtilityAccount::create(['utility_type' => 'electricity', 'status' => 'active']);
     }
 
     /** @return array<int, array{method: string, uri: string}> */
@@ -282,6 +287,13 @@ class AbilityEnforcementTest extends TestCase
             ['method' => 'POST', 'uri' => "/api/v1/cooperative-votes/{$this->cooperativeVote->id}/ballots"],
             ['method' => 'GET', 'uri' => "/api/v1/fixed-assets/{$this->fixedAsset->id}/maintenance-records"],
             ['method' => 'POST', 'uri' => "/api/v1/fixed-assets/{$this->fixedAsset->id}/maintenance-records"],
+            ['method' => 'GET', 'uri' => '/api/v1/utility-accounts'],
+            ['method' => 'POST', 'uri' => '/api/v1/utility-accounts'],
+            ['method' => 'GET', 'uri' => "/api/v1/utility-accounts/{$this->utilityAccount->id}"],
+            ['method' => 'PATCH', 'uri' => "/api/v1/utility-accounts/{$this->utilityAccount->id}"],
+            ['method' => 'DELETE', 'uri' => "/api/v1/utility-accounts/{$this->utilityAccount->id}"],
+            ['method' => 'GET', 'uri' => "/api/v1/utility-accounts/{$this->utilityAccount->id}/readings"],
+            ['method' => 'POST', 'uri' => "/api/v1/utility-accounts/{$this->utilityAccount->id}/readings"],
         ];
     }
 

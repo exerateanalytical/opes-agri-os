@@ -168,7 +168,15 @@ piece actually needs, not by the order §3 lists them in:
   itself predates the API-first discipline and has no REST surface (Livewire only) — the new maintenance
   records got one anyway (`/api/v1/fixed-assets/{fixedAsset}/maintenance-records`), consistent with "every
   module ships API-first" applying to what's newly built, not requiring a retrofit of what it extends.
-  Utility Management is Phase 2b, not yet built.
+  **Phase 2b shipped: Utility Management.** `UtilityAccount` (electricity/water/internet/gas/other,
+  provider, account number, optional `Farm` link) with `UtilityReading` (meter reading, consumption,
+  cost) as its own new module — unlike Phase 2a, nothing existing already modeled a metered account or
+  a consumption log, so this got its own `utilities` module and permission group rather than reusing
+  another's. `consumption` is entered directly per reading rather than derived from consecutive meter
+  readings, since a meter can be replaced or reset and a derived running total would then be wrong; the
+  Expenses screen already records what a utility bill cost, this module records what was actually used.
+  Full API + Livewire UI shipped together this time (no repeat of Phase 2a's assets legacy-precedent
+  situation, since `utilities` is new end to end).
 - **Phase 3: Fleet & Logistics, Supply Chain & Traceability.** New domain shape (route/trip tracking,
   chain-of-custody) — its own design pass when it's next.
 - **Phase 4: Partner & NGO CRM, Project & Grant Management.** New domain shape (grant milestones,

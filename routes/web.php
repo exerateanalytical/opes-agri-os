@@ -67,6 +67,7 @@ use App\Livewire\Stock\Locations as StockLocations;
 use App\Livewire\Stock\Valuation as StockValuation;
 use App\Livewire\Team\Index as TeamIndex;
 use App\Livewire\Team\Show as TeamShow;
+use App\Livewire\Utilities\Index as UtilitiesIndex;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -244,6 +245,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/procurement', ProcurementIndex::class)->middleware('can:procurement.view')->name('procurement');
     Route::get('/livestock', LivestockIndex::class)->middleware('can:livestock.view')->name('livestock');
     Route::get('/cooperative', CooperativeIndex::class)->middleware('can:cooperative.view')->name('cooperative');
+    Route::get('/utilities', UtilitiesIndex::class)->middleware('can:utilities.view')->name('utilities');
     Route::get('/banking', BankingIndex::class)->middleware('can:banking.view')->name('banking');
 
     /*

@@ -62,6 +62,7 @@ class RolePermissionSeeder extends Seeder
                 'view', 'create', 'update', 'record-contribution',
                 'record-attendance', 'cast-vote',
             ],
+            'Utilities' => ['view', 'create', 'update', 'record-reading'],
         ]],
         'accountant' => ['name' => 'Accountant', 'level' => 4, 'grants' => [
             'Business' => ['view'],
@@ -100,6 +101,9 @@ class RolePermissionSeeder extends Seeder
             // entering the till or the bank — the accountant's ground before
             // anyone else's, same reasoning as Payments and Expenses above.
             'Cooperative' => ['view', 'disburse-loan', 'record-repayment'],
+            // Utility bills feed the books the same way procurement does —
+            // visibility, not the reading itself.
+            'Utilities' => ['view'],
         ]],
         'sales-officer' => ['name' => 'Sales Officer', 'level' => 5, 'grants' => [
             'Business' => ['view'],
@@ -154,6 +158,7 @@ class RolePermissionSeeder extends Seeder
             'Procurement' => ['view'],
             'Livestock' => ['view'],
             'Cooperative' => ['view'],
+            'Utilities' => ['view'],
         ]],
     ];
 

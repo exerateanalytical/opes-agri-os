@@ -74,6 +74,7 @@ class Permissions
             'view', 'create', 'update', 'delete', 'record-contribution',
             'disburse-loan', 'record-repayment', 'record-attendance', 'cast-vote',
         ],
+        'Utilities' => ['view', 'create', 'update', 'delete', 'record-reading'],
     ];
 
     /**

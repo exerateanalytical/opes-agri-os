@@ -24,6 +24,7 @@ use App\Models\Receipt;
 use App\Models\Season;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Models\UtilityAccount;
 use App\Policies\AnimalBatchPolicy;
 use App\Policies\AnimalPolicy;
 use App\Policies\ArtisanPolicy;
@@ -45,6 +46,7 @@ use App\Policies\PurchaseOrderPolicy;
 use App\Policies\ReceiptPolicy;
 use App\Policies\SeasonPolicy;
 use App\Policies\TicketPolicy;
+use App\Policies\UtilityAccountPolicy;
 use App\Support\CurrentCompany;
 use App\Support\Modules;
 use App\Support\Permissions;
@@ -77,6 +79,7 @@ class AuthServiceProvider extends ServiceProvider
         AnimalBatch::class => AnimalBatchPolicy::class,
         CooperativeMember::class => CooperativeMemberPolicy::class,
         Loan::class => LoanPolicy::class,
+        UtilityAccount::class => UtilityAccountPolicy::class,
         CooperativeMeeting::class => CooperativeMeetingPolicy::class,
         CooperativeVote::class => CooperativeVotePolicy::class,
     ];

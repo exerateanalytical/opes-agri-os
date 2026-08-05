@@ -32,6 +32,7 @@ use App\Models\SoilTestRecord;
 use App\Models\StockLocation;
 use App\Models\Stocktake;
 use App\Models\Ticket;
+use App\Models\UtilityAccount;
 
 /*
  * The module catalogue — what a business can switch on and off.
@@ -274,6 +275,15 @@ return [
         'default' => true,
         'groups' => ['cooperative'],
         'models' => [CooperativeMember::class, Loan::class, CooperativeMeeting::class, CooperativeVote::class],
+    ],
+
+    'utilities' => [
+        'label' => 'Utilities',
+        'description' => 'Electricity, water and other metered accounts, and how much they use.',
+        'icon' => 'wallet',
+        'default' => true,
+        'groups' => ['utilities'],
+        'models' => [UtilityAccount::class],
     ],
 
     /*
