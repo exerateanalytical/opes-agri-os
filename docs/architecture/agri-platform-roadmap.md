@@ -340,6 +340,24 @@ module found three confirmed defects, fixed here:
   for sales (unlike stock *transfers*, which do refuse a shortage — see `StockLocationsTest`), so adding
   one here would be inventing policy the audit didn't ask for; flagged for whoever scopes that decision.
 
+**2026-08-06 — Hardening: Livestock audit fixes.** A read-only audit of the Livestock module found two
+confirmed defects, fixed here:
+
+- `BatchCountAdjuster::adjust()` computed `$newCount` from the in-memory `$batch` *before* its transaction
+  opened, and never re-read the row under a lock inside it — the same shape of lost-update race already
+  fixed in `DocumentIssuer`/`DocumentConverter`/`PaymentRecorder`. Two concurrent adjustments against the
+  same batch could both read the same stale `current_count`, both pass the zero-floor guard, and the
+  second write silently clobber the first, leaving `adjustments()->sum('change')` out of step with
+  `current_count`. It now re-fetches with `AnimalBatch::query()->lockForUpdate()->findOrFail()` inside the
+  transaction and computes/guards the new count from that locked row.
+- `sire_id`/`dam_id` validation on `StoreAnimalRequest`/`UpdateAnimalRequest` checked existence, company
+  scope, and sex, but never rejected an animal referencing itself or a multi-generation parentage cycle
+  (an animal's own descendant being set as its parent). A new `NotAnAnimalDescendant` validation rule
+  rejects both cases on update, using a new `Animal::descendantIds()` helper — a bounded (6-generation),
+  breadth-first walk through `offspringAsSire`/`offspringAsDam` rather than a recursive CTE, since deep
+  real-world pedigrees are rare and portability across the supported DB engines isn't guaranteed for
+  recursive queries.
+
 ## 5. Documentation approach
 
 Per-module specs are written **just before that module is built**, not all up front — this doc stays short

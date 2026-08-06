@@ -160,6 +160,35 @@ class AnimalsApiTest extends TestCase
             ])->assertStatus(403);
     }
 
+    public function test_an_animal_cannot_be_set_as_its_own_parent(): void
+    {
+        app(CurrentCompany::class)->set($this->company);
+        $animal = Animal::create(['species' => 'Cattle', 'sex' => 'male', 'status' => 'active']);
+
+        $this->api()->patchJson("/api/v1/animals/{$animal->id}", [
+            'sire_id' => $animal->id,
+        ])->assertStatus(422)->assertJsonPath('error.details.sire_id.0', 'An animal cannot be its own parent.');
+    }
+
+    public function test_a_two_generation_parentage_cycle_is_rejected(): void
+    {
+        app(CurrentCompany::class)->set($this->company);
+
+        $a = Animal::create(['species' => 'Cattle', 'sex' => 'male', 'status' => 'active']);
+        $b = Animal::create(['species' => 'Cattle', 'sex' => 'female', 'status' => 'active', 'sire_id' => $a->id]);
+
+        // B is already A's offspring (via sire). Making B the dam of A would
+        // make A a descendant of its own descendant.
+        $this->api()->patchJson("/api/v1/animals/{$a->id}", [
+            'dam_id' => $b->id,
+        ])->assertStatus(422)->assertJsonPath(
+            'error.details.dam_id.0',
+            'This would make one of the animal\'s own descendants its parent, creating a cycle.'
+        );
+
+        $this->assertNull($a->fresh()->dam_id);
+    }
+
     public function test_animals_are_scoped_to_their_company(): void
     {
         $otherOwner = User::factory()->create();

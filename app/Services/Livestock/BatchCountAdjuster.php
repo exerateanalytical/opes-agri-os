@@ -27,13 +27,19 @@ class BatchCountAdjuster
 
     public function adjust(AnimalBatch $batch, int $change, ?User $actor = null, ?string $reason = null): AnimalBatch
     {
-        $newCount = $batch->current_count + $change;
+        return DB::transaction(function () use ($batch, $change, $actor, $reason) {
+            // Re-read under a row lock: two adjustments against the same batch
+            // at once must not both compute the new count from the same stale
+            // read and clobber each other — see PaymentRecorder::record() for
+            // the same pattern.
+            $batch = AnimalBatch::query()->lockForUpdate()->findOrFail($batch->id);
 
-        if ($newCount < 0) {
-            throw new RuntimeException('This would take the batch below zero.');
-        }
+            $newCount = $batch->current_count + $change;
 
-        return DB::transaction(function () use ($batch, $change, $newCount, $actor, $reason) {
+            if ($newCount < 0) {
+                throw new RuntimeException('This would take the batch below zero.');
+            }
+
             $company = app(CurrentCompany::class)->get();
 
             $batch->forceFill(['current_count' => $newCount])->save();

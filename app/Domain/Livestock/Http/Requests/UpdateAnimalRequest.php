@@ -2,6 +2,7 @@
 
 namespace App\Domain\Livestock\Http\Requests;
 
+use App\Domain\Livestock\Rules\NotAnAnimalDescendant;
 use App\Models\Animal;
 use App\Support\CurrentCompany;
 use Illuminate\Foundation\Http\FormRequest;
@@ -17,6 +18,7 @@ class UpdateAnimalRequest extends FormRequest
     public function rules(): array
     {
         $companyId = app(CurrentCompany::class)->id();
+        $animal = $this->route('animal');
 
         return [
             'farm_id' => ['nullable', Rule::exists('farms', 'id')->where('company_id', $companyId)],
@@ -27,10 +29,12 @@ class UpdateAnimalRequest extends FormRequest
             'sire_id' => [
                 'nullable',
                 Rule::exists('animals', 'id')->where('company_id', $companyId)->where('sex', 'male'),
+                new NotAnAnimalDescendant($animal),
             ],
             'dam_id' => [
                 'nullable',
                 Rule::exists('animals', 'id')->where('company_id', $companyId)->where('sex', 'female'),
+                new NotAnAnimalDescendant($animal),
             ],
             'date_of_birth' => ['nullable', 'date'],
             'status' => ['sometimes', Rule::in(Animal::STATUSES)],

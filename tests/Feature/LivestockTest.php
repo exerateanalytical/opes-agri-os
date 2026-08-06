@@ -12,6 +12,7 @@ use App\Models\Item;
 use App\Models\Role;
 use App\Models\StockMovement;
 use App\Models\User;
+use App\Services\Livestock\BatchCountAdjuster;
 use App\Support\CurrentCompany;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -148,5 +149,55 @@ class LivestockTest extends TestCase
             ->assertHasErrors('batch');
 
         $this->assertSame(5, $batch->fresh()->current_count);
+    }
+
+    public function test_the_adjuster_re_reads_the_batch_under_lock_so_the_audit_trail_stays_consistent(): void
+    {
+        $batch = AnimalBatch::create(['species' => 'Broiler', 'initial_count' => 100, 'current_count' => 100, 'status' => 'active']);
+
+        // Simulate a caller holding a stale in-memory copy of the batch (as a
+        // concurrent request would) by adjusting through a *different*
+        // instance than the one we inspect afterwards. If the service ever
+        // regresses to computing $newCount from the caller's copy instead of
+        // a locked re-fetch, this would still "work" in SQLite's single
+        // connection, but the resulting_count/current_count relationship
+        // below is what the audit trail actually depends on and must always
+        // hold regardless of which instance triggered the write.
+        $staleHandle = AnimalBatch::query()->findOrFail($batch->id);
+
+        app(BatchCountAdjuster::class)->adjust($staleHandle, -30);
+
+        $batch->refresh();
+        $adjustment = $batch->adjustments()->latest('id')->first();
+
+        $this->assertSame(70, $batch->current_count);
+        $this->assertSame($batch->current_count, $adjustment->resulting_count);
+        $this->assertSame((int) $batch->adjustments()->sum('change'), $batch->current_count - $batch->initial_count);
+    }
+
+    public function test_sequential_adjustments_keep_the_audit_trail_consistent_with_the_running_count(): void
+    {
+        $batch = AnimalBatch::create(['species' => 'Broiler', 'initial_count' => 100, 'current_count' => 100, 'status' => 'active']);
+        $adjuster = app(BatchCountAdjuster::class);
+
+        $adjuster->adjust($batch, -10);
+        $adjuster->adjust($batch, -5);
+        $adjuster->adjust($batch, 3);
+
+        $batch->refresh();
+
+        $this->assertSame(88, $batch->current_count);
+        $this->assertSame((int) $batch->adjustments()->sum('change'), $batch->current_count - $batch->initial_count);
+
+        // Each adjustment's resulting_count must equal the running total up
+        // to and including that adjustment — the audit trail must always
+        // reconstruct to the batch's current state.
+        $running = $batch->initial_count;
+        foreach ($batch->adjustments()->orderBy('id')->get() as $adjustment) {
+            $running += $adjustment->change;
+            $this->assertSame($running, $adjustment->resulting_count);
+        }
+
+        $this->assertSame($batch->current_count, $batch->adjustments()->latest('id')->first()->resulting_count);
     }
 }
