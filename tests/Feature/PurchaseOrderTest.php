@@ -85,6 +85,24 @@ class PurchaseOrderTest extends TestCase
         $this->assertNotNull($po->number);
     }
 
+    public function test_editing_lines_on_an_issued_purchase_order_is_rejected(): void
+    {
+        $po = PurchaseOrder::create([
+            'supplier_id' => $this->supplier->id, 'status' => 'issued', 'number' => 'PO-2026-00001', 'order_date' => now(),
+        ]);
+        $line = $po->lines()->create(['item_id' => $this->fertiliser->id, 'quantity' => 10, 'unit_cost' => 5000]);
+
+        Livewire::actingAs($this->owner)
+            ->test(ProcurementIndex::class)
+            ->call('edit', $po->id)
+            ->set('lines.0.quantity', '99')
+            ->call('save')
+            ->assertHasErrors('lines');
+
+        $this->assertSame('10.000', $line->fresh()->quantity);
+        $this->assertSame('issued', $po->fresh()->status);
+    }
+
     public function test_receiving_writes_stock_and_updates_the_order(): void
     {
         $po = PurchaseOrder::create([

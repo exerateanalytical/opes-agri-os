@@ -162,6 +162,130 @@ class PurchaseOrdersApiTest extends TestCase
         ])->assertOk()->assertJsonPath('data.status', 'received');
     }
 
+    public function test_editing_lines_on_a_draft_purchase_order_is_allowed(): void
+    {
+        $po = $this->createPurchaseOrder();
+
+        $response = $this->api()->patchJson("/api/v1/purchase-orders/{$po->id}", [
+            'lines' => [
+                ['item_id' => $this->fertiliser->id, 'quantity' => 20, 'unit_cost' => 4500],
+            ],
+        ]);
+
+        $response->assertOk()->assertJsonCount(1, 'data.lines');
+        $this->assertSame('20.000', $po->fresh()->lines()->sole()->quantity);
+    }
+
+    public function test_editing_lines_on_an_issued_purchase_order_is_rejected(): void
+    {
+        $po = $this->createPurchaseOrder();
+        $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/issue")->assertOk();
+        $originalLineId = $po->lines()->sole()->id;
+
+        $response = $this->api()->patchJson("/api/v1/purchase-orders/{$po->id}", [
+            'lines' => [
+                ['item_id' => $this->fertiliser->id, 'quantity' => 99, 'unit_cost' => 1],
+            ],
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertNotEmpty($response->json('error.details.lines'));
+        $this->assertSame($originalLineId, $po->fresh()->lines()->sole()->id);
+    }
+
+    public function test_editing_lines_on_a_partially_received_purchase_order_is_rejected(): void
+    {
+        $po = $this->createPurchaseOrder();
+        $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/issue")->assertOk();
+        $line = $po->lines()->sole();
+        $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/receive", [
+            'lines' => [['purchase_order_line_id' => $line->id, 'quantity' => 4]],
+        ])->assertOk()->assertJsonPath('data.status', 'partially_received');
+
+        $response = $this->api()->patchJson("/api/v1/purchase-orders/{$po->id}", [
+            'lines' => [
+                ['item_id' => $this->fertiliser->id, 'quantity' => 99, 'unit_cost' => 1],
+            ],
+        ]);
+        $response->assertStatus(422);
+        $this->assertNotEmpty($response->json('error.details.lines'));
+    }
+
+    public function test_editing_lines_on_a_received_purchase_order_is_rejected(): void
+    {
+        $po = $this->createPurchaseOrder();
+        $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/issue")->assertOk();
+        $line = $po->lines()->sole();
+        $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/receive", [
+            'lines' => [['purchase_order_line_id' => $line->id, 'quantity' => 10]],
+        ])->assertOk()->assertJsonPath('data.status', 'received');
+
+        $response = $this->api()->patchJson("/api/v1/purchase-orders/{$po->id}", [
+            'lines' => [
+                ['item_id' => $this->fertiliser->id, 'quantity' => 99, 'unit_cost' => 1],
+            ],
+        ]);
+        $response->assertStatus(422);
+        $this->assertNotEmpty($response->json('error.details.lines'));
+    }
+
+    public function test_changing_supplier_on_an_issued_purchase_order_is_rejected(): void
+    {
+        $po = $this->createPurchaseOrder();
+        $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/issue")->assertOk();
+
+        $otherSupplier = Contact::create(['name' => 'Other Supply Co', 'type' => 'supplier']);
+
+        $response = $this->api()->patchJson("/api/v1/purchase-orders/{$po->id}", [
+            'supplier_id' => $otherSupplier->id,
+        ]);
+        $response->assertStatus(422);
+        $this->assertNotEmpty($response->json('error.details.supplier_id'));
+    }
+
+    public function test_notes_can_still_be_edited_on_an_issued_purchase_order(): void
+    {
+        $po = $this->createPurchaseOrder();
+        $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/issue")->assertOk();
+
+        $this->api()->patchJson("/api/v1/purchase-orders/{$po->id}", [
+            'notes' => 'Delivered to gate 3',
+        ])->assertOk()->assertJsonPath('data.notes', 'Delivered to gate 3');
+    }
+
+    public function test_receiving_more_than_remaining_is_rejected(): void
+    {
+        $po = $this->createPurchaseOrder();
+        $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/issue")->assertOk();
+        $line = $po->lines()->sole();
+
+        $response = $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/receive", [
+            'lines' => [
+                ['purchase_order_line_id' => $line->id, 'quantity' => 15],
+            ],
+        ]);
+
+        $response->assertStatus(409);
+        $this->assertSame('0.000', $line->fresh()->quantity_received);
+    }
+
+    public function test_receiving_more_than_what_remains_after_a_partial_receipt_is_rejected(): void
+    {
+        $po = $this->createPurchaseOrder();
+        $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/issue")->assertOk();
+        $line = $po->lines()->sole();
+
+        $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/receive", [
+            'lines' => [['purchase_order_line_id' => $line->id, 'quantity' => 4]],
+        ])->assertOk()->assertJsonPath('data.status', 'partially_received');
+
+        $this->api()->postJson("/api/v1/purchase-orders/{$po->id}/receive", [
+            'lines' => [['purchase_order_line_id' => $line->id, 'quantity' => 7]],
+        ])->assertStatus(409);
+
+        $this->assertSame('4.000', $line->fresh()->quantity_received);
+    }
+
     public function test_a_token_without_the_receive_ability_is_refused(): void
     {
         $po = $this->createPurchaseOrder();

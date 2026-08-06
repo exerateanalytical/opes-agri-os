@@ -48,7 +48,12 @@ class CropCyclePlanner
         return $cycle;
     }
 
-    protected function guardNotFinished(CropCycle $cycle): void
+    /**
+     * Public so the plain update endpoint (CropCycleController::update()) can
+     * reuse the same guard before touching status/stage fields directly —
+     * a harvested or closed cycle must not be reopened through any path.
+     */
+    public function guardNotFinished(CropCycle $cycle): void
     {
         if (in_array($cycle->status, ['harvested', 'closed'], true)) {
             throw new RuntimeException("This crop cycle is {$cycle->status} and cannot change stage.");

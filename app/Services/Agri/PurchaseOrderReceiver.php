@@ -56,9 +56,20 @@ class PurchaseOrderReceiver
                 continue;
             }
 
+            // A submitted quantity beyond what's outstanding is rejected, not
+            // truncated — silently clamping would let a client believe it
+            // received more than the ledger actually recorded.
+            if ($quantity > $remaining) {
+                throw new RuntimeException(sprintf(
+                    'Cannot receive %s of this line — only %s remains outstanding.',
+                    rtrim(rtrim(number_format($quantity, 3, '.', ''), '0'), '.'),
+                    rtrim(rtrim(number_format($remaining, 3, '.', ''), '0'), '.'),
+                ));
+            }
+
             $usable[] = [
                 'line' => $poLine,
-                'quantity' => min($quantity, $remaining),
+                'quantity' => $quantity,
                 'batch_number' => $line['batch_number'] ?? null,
                 'expires_on' => $line['expires_on'] ?? null,
             ];

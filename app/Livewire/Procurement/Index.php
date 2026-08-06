@@ -101,6 +101,15 @@ class Index extends Component
         if ($this->editingId) {
             $po = PurchaseOrder::findOrFail($this->editingId);
             $this->authorize('update', $po);
+
+            // Lines (and the supplier) are frozen once a PO has left draft —
+            // it may already have quantity_received against them, and this
+            // form only knows how to replace the whole line set wholesale.
+            if ($po->status !== 'draft') {
+                $this->addError('lines', 'This purchase order has already been issued — its lines can no longer be edited.');
+
+                return;
+            }
         } else {
             $this->authorize('create', PurchaseOrder::class);
             $po = PurchaseOrder::create([

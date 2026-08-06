@@ -8,6 +8,7 @@ use App\Domain\Agri\Http\Requests\UpdateCropCycleRequest;
 use App\Domain\Agri\Http\Resources\CropCycleResource;
 use App\Http\Controllers\Api\V1\Controller;
 use App\Models\CropCycle;
+use App\Services\Agri\CropCyclePlanner;
 use App\Services\Agri\HarvestRecorder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,9 +47,18 @@ class CropCycleController extends Controller
         return CropCycleResource::make($cropCycle)->response()->setStatusCode(201);
     }
 
-    public function update(UpdateCropCycleRequest $request, CropCycle $cropCycle): CropCycleResource
+    public function update(UpdateCropCycleRequest $request, CropCycle $cropCycle, CropCyclePlanner $planner): CropCycleResource
     {
-        $cropCycle->update($request->validated());
+        $data = $request->validated();
+
+        // A harvested/closed cycle is finished: routing through the same
+        // guard CropCyclePlanner uses for its own transitions closes the
+        // reopen path this plain update endpoint otherwise leaves open.
+        if (array_intersect(['status', 'growth_stage'], array_keys($data)) !== []) {
+            $planner->guardNotFinished($cropCycle);
+        }
+
+        $cropCycle->update($data);
 
         return CropCycleResource::make($cropCycle);
     }

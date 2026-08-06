@@ -404,3 +404,36 @@ follow-up**:
   gate V3 M3 explicitly left informational. A meeting still only `scheduled` (attendance isn't in yet) is
   not held to quorum, and a vote raised with no meeting at all — `CooperativeMeeting::quorumMet()` has
   nothing to check in that case — is unaffected, exactly as before.
+
+**2026-08-05 — Hardening: Agri module audit fixes.** A read-only audit of the Agri module (Procurement,
+Crops) found four confirmed defects, fixed here:
+
+- `PurchaseOrderController::update()` deleted and recreated a PO's lines whenever `lines` was present in
+  the payload, with no check on status — editing an issued or (partially) received PO could desync
+  `quantity_received` from lines that no longer existed and reopen the door to double-receiving.
+  `UpdatePurchaseOrderRequest` now rejects (422, not a silent no-op) any attempt to touch `lines` or
+  change `supplier_id` once a PO is no longer `draft`; the Livewire `Procurement\Index::save()` form
+  carries the same guard. Notes and dates remain editable at any status.
+- `CropCycleController::update()` called `$cropCycle->update()` directly, bypassing
+  `CropCyclePlanner::guardNotFinished()` — the literal string `'harvested'` was refused as a *target*
+  value, but nothing stopped a cycle already `harvested` or `closed` from having its status flipped back
+  to `growing` and re-harvested through `HarvestRecorder`, double-posting stock and the ledger.
+  `CropCyclePlanner::guardNotFinished()` is now public and the controller calls it before applying any
+  `status`/`growth_stage` change, closing the reopen path; other fields (notes, dates) stay editable on a
+  finished cycle.
+- `PurchaseOrderIssuer::nextNumber()` did a plain `COUNT(*) + 1` with no locking. The
+  `(company_id, number)` unique constraint the original PO migration already carries meant a race could
+  only ever produce a rejected insert rather than a silent duplicate, but `issue()` didn't handle that
+  rejection — it now runs the count under `lockForUpdate()` inside the same transaction as the save
+  (mirroring the row-lock discipline `DocumentNumbers::allocate()` uses for Sales, short of a full
+  `NumberLease` ledger, which exists for offline device numbering POs don't need) and retries once if a
+  collision still slips through as a unique-constraint violation.
+- `PurchaseOrderReceiver::receive()` silently clamped a submitted line quantity down to what remained
+  outstanding instead of rejecting it — a client could believe it had received more than the ledger
+  actually recorded. Over-receiving a line now raises a `RuntimeException` (mapped to a 409 by
+  `ApiExceptionRenderer`, the same path `HarvestRecorder`'s guards already use) naming the requested and
+  remaining quantities instead of truncating.
+
+Left as a documented gap, not fixed in this pass: `recordQuietly()` swallowing a ledger-posting failure
+on harvest is a deliberate pattern shared with Grants and Livestock, not specific to Agri — a consistent
+fix across every caller is its own cross-cutting piece of work, out of scope here.

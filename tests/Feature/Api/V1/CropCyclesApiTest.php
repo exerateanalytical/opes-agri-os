@@ -151,6 +151,60 @@ class CropCyclesApiTest extends TestCase
         $this->assertSame(42.0, (float) $this->maize->fresh()->stockOnHand());
     }
 
+    public function test_a_harvested_cycle_cannot_be_reopened_through_the_update_endpoint(): void
+    {
+        app(CurrentCompany::class)->set($this->company);
+        $cycle = CropCycle::create([
+            'field_id' => $this->field->id,
+            'season_id' => $this->season->id,
+            'item_id' => $this->maize->id,
+            'status' => 'growing',
+        ]);
+
+        $this->api()->postJson("/api/v1/crop-cycles/{$cycle->id}/harvest", ['quantity' => 42])->assertOk();
+
+        $this->api()->patchJson("/api/v1/crop-cycles/{$cycle->id}", ['status' => 'growing'])
+            ->assertStatus(409);
+
+        $this->assertSame('harvested', $cycle->fresh()->status);
+
+        // The harvest endpoint's own guard should still refuse a second
+        // harvest now that the reopen path via update() is closed too.
+        $this->api()->postJson("/api/v1/crop-cycles/{$cycle->id}/harvest", ['quantity' => 10])
+            ->assertStatus(409);
+
+        $movementsCount = StockMovement::query()->where('item_id', $this->maize->id)->count();
+        $this->assertSame(1, $movementsCount);
+    }
+
+    public function test_a_closed_cycle_cannot_have_its_growth_stage_changed(): void
+    {
+        app(CurrentCompany::class)->set($this->company);
+        $cycle = CropCycle::create([
+            'field_id' => $this->field->id,
+            'season_id' => $this->season->id,
+            'item_id' => $this->maize->id,
+            'status' => 'closed',
+        ]);
+
+        $this->api()->patchJson("/api/v1/crop-cycles/{$cycle->id}", ['growth_stage' => 'flowering'])
+            ->assertStatus(409);
+    }
+
+    public function test_notes_can_still_be_edited_on_a_harvested_cycle(): void
+    {
+        app(CurrentCompany::class)->set($this->company);
+        $cycle = CropCycle::create([
+            'field_id' => $this->field->id,
+            'season_id' => $this->season->id,
+            'item_id' => $this->maize->id,
+            'status' => 'harvested',
+        ]);
+
+        $this->api()->patchJson("/api/v1/crop-cycles/{$cycle->id}", ['notes' => 'Good yield'])
+            ->assertOk()->assertJsonPath('data.notes', 'Good yield');
+    }
+
     public function test_harvesting_twice_is_a_conflict(): void
     {
         app(CurrentCompany::class)->set($this->company);
