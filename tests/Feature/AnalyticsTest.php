@@ -241,4 +241,52 @@ class AnalyticsTest extends TestCase
 
         Livewire::actingAs($employee)->test(AnalyticsDashboard::class)->assertForbidden();
     }
+
+    public function test_drilldown_on_a_disabled_module_leaks_no_data(): void
+    {
+        $contact = Contact::create(['type' => 'customer', 'name' => 'Jane Member']);
+        $member = CooperativeMember::create([
+            'contact_id' => $contact->id, 'membership_number' => 'M-1', 'status' => 'active',
+        ]);
+        Loan::create([
+            'cooperative_member_id' => $member->id, 'principal' => 1000, 'balance' => 800, 'status' => 'active',
+        ]);
+
+        $this->company->forceFill(['modules' => ['cooperative' => false]])->save();
+
+        // Attempting to toggle the drilldown for a disabled module must not
+        // select it.
+        $component = Livewire::actingAs($this->owner)->test(AnalyticsDashboard::class)
+            ->call('toggleDrilldown', 'cooperative');
+
+        $this->assertCount(0, $component->viewData('drilldownRows'));
+
+        // Even if the drilldown property is set directly (simulating the
+        // ?drilldown=cooperative URL param hydrating straight past
+        // toggleDrilldown), the underlying query must never run.
+        $component2 = Livewire::actingAs($this->owner)->test(AnalyticsDashboard::class)
+            ->set('drilldown', 'cooperative');
+
+        $this->assertCount(0, $component2->viewData('drilldownRows'));
+    }
+
+    public function test_range_with_from_after_to_falls_back_to_the_default_range_with_an_error(): void
+    {
+        $component = Livewire::actingAs($this->owner)->test(AnalyticsDashboard::class)
+            ->set('from', now()->toDateString())
+            ->set('to', now()->subDays(5)->toDateString());
+
+        $component->assertHasErrors('to');
+        $this->assertNull($component->viewData('summary')['range']['from']);
+    }
+
+    public function test_a_range_longer_than_the_cap_is_rejected(): void
+    {
+        $component = Livewire::actingAs($this->owner)->test(AnalyticsDashboard::class)
+            ->set('from', now()->subMonths(30)->toDateString())
+            ->set('to', now()->toDateString());
+
+        $component->assertHasErrors('to');
+        $this->assertNull($component->viewData('summary')['range']['from']);
+    }
 }

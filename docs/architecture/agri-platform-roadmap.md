@@ -292,6 +292,27 @@ piece actually needs, not by the order §3 lists them in:
 
   This closes V4 — every phase in §4 has now shipped, including the four cuts Phase 5 originally deferred.
 
+  **Hardening pass (Grants + Analytics).** `GrantTransactionRecorder::record()` re-reads the
+  `GrantProject` under `lockForUpdate()` inside its `DB::transaction()` before checking the overspend
+  guard, the same race the `PaymentRecorder`/`DocumentIssuer` lock-refetch pattern (V2/V3) already
+  closes for invoices — two concurrent expenditures against the same grant can no longer both pass the
+  balance check on stale data. A ledger posting failure (a misconfigured chart missing `grant_income` or
+  `project_expenses`) now rolls back the whole transaction — the recorder stopped wrapping
+  `recordGrantReceipt()`/`recordGrantExpenditure()` in `recordQuietly()`, since grants are real-money
+  movement like a loan disbursement, not a soft-fail valuation step; a failed post must not leave
+  `received_amount`/`spent_amount` out of sync with the books. `GrantTransaction` gained a `currency`
+  column (defaulting to, and validated against, its `GrantProject`'s currency) — a transaction recorded
+  in a currency other than its project's is now refused rather than silently mixing currencies into one
+  running total. On the Analytics side, `Dashboard::toggleDrilldown()` and `drilldownRows()` now check
+  the same `Modules::enabled()` gate `AnalyticsSummaryService`'s sections already use, closing a leak
+  where a disabled module's underlying records were still queryable through `?drilldown=` even though its
+  summary card reported `enabled: false`. `from`/`to` gained ordering (`to` before `from` is now a
+  validation error rather than silently falling back) and a shared 24-month span cap, enforced identically
+  by the Livewire `Dashboard::range()` (via `addError('to', …)`) and the API's
+  `AnalyticsController::MAX_RANGE_MONTHS` — an unbounded custom range was an easy way to force an
+  expensive company-wide scan. The drill-down tables also now report a "showing 200 of N" total
+  alongside the existing 200-row cap, so a truncated list doesn't read as a complete one.
+
 **Five inventory items are already usable today and were deliberately NOT rebuilt as separate modules,**
 because doing so would duplicate schema that already exists:
 

@@ -113,6 +113,15 @@ class AnalyticsApiTest extends TestCase
         $response->assertStatus(422);
     }
 
+    public function test_a_date_range_longer_than_the_cap_is_rejected(): void
+    {
+        $response = $this->api()->getJson('/api/v1/analytics/dashboard?from=2020-01-01&to=2026-01-01');
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('error.code', 'validation_failed');
+        $this->assertArrayHasKey('to', $response->json('error.details'));
+    }
+
     public function test_crops_group_by_farm_returns_a_per_farm_breakdown(): void
     {
         $farmA = Farm::create(['name' => 'Farm A']);

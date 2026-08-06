@@ -64,6 +64,9 @@
                 </button>
             </div>
         </div>
+        @error('to')
+            <p class="mt-2 text-[12.5px] font-medium text-negative">{{ $message }}</p>
+        @enderror
         @if ($summary['range']['from'])
             <p class="mt-2 text-[12.5px] text-muted">Showing {{ $summary['range']['from'] }} to {{ $summary['range']['to'] }}.</p>
         @else
@@ -132,6 +135,9 @@
 
             @if ($drilldown === 'crops')
                 <div class="mt-3 overflow-x-auto border-t border-border pt-3">
+                    @if ($drilldownTotal > 200)
+                        <p class="pt-3 text-[12px] text-muted">Showing 200 of {{ number_format($drilldownTotal) }} matching records.</p>
+                    @endif
                     <table class="w-full text-left text-[13px]">
                         <thead>
                             <tr class="text-[12px] font-semibold uppercase tracking-wide text-muted">
@@ -186,6 +192,9 @@
 
             @if ($drilldown === 'livestock')
                 <div class="mt-3 overflow-x-auto border-t border-border pt-3">
+                    @if ($drilldownTotal > 200)
+                        <p class="pt-3 text-[12px] text-muted">Showing 200 of {{ number_format($drilldownTotal) }} matching records.</p>
+                    @endif
                     <table class="w-full text-left text-[13px]">
                         <thead>
                             <tr class="text-[12px] font-semibold uppercase tracking-wide text-muted">
@@ -239,6 +248,9 @@
 
                 @if ($drilldown === 'procurement')
                     <div class="mt-3 overflow-x-auto border-t border-border pt-3">
+                    @if ($drilldownTotal > 200)
+                        <p class="pt-3 text-[12px] text-muted">Showing 200 of {{ number_format($drilldownTotal) }} matching records.</p>
+                    @endif
                         <table class="w-full text-left text-[13px]">
                             <thead>
                                 <tr class="text-[12px] font-semibold uppercase tracking-wide text-muted">
@@ -293,6 +305,9 @@
 
                 @if ($drilldown === 'assets')
                     <div class="mt-3 overflow-x-auto border-t border-border pt-3">
+                    @if ($drilldownTotal > 200)
+                        <p class="pt-3 text-[12px] text-muted">Showing 200 of {{ number_format($drilldownTotal) }} matching records.</p>
+                    @endif
                         <table class="w-full text-left text-[13px]">
                             <thead>
                                 <tr class="text-[12px] font-semibold uppercase tracking-wide text-muted">
@@ -376,6 +391,9 @@
 
                 @if ($drilldown === 'cooperative')
                     <div class="mt-3 overflow-x-auto border-t border-border pt-3">
+                    @if ($drilldownTotal > 200)
+                        <p class="pt-3 text-[12px] text-muted">Showing 200 of {{ number_format($drilldownTotal) }} matching records.</p>
+                    @endif
                         <table class="w-full text-left text-[13px]">
                             <thead>
                                 <tr class="text-[12px] font-semibold uppercase tracking-wide text-muted">
@@ -435,6 +453,9 @@
 
                 @if ($drilldown === 'grants')
                     <div class="mt-3 overflow-x-auto border-t border-border pt-3">
+                    @if ($drilldownTotal > 200)
+                        <p class="pt-3 text-[12px] text-muted">Showing 200 of {{ number_format($drilldownTotal) }} matching records.</p>
+                    @endif
                         <table class="w-full text-left text-[13px]">
                             <thead>
                                 <tr class="text-[12px] font-semibold uppercase tracking-wide text-muted">

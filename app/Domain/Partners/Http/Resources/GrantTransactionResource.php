@@ -18,6 +18,7 @@ class GrantTransactionResource extends JsonResource
             'grant_project_id' => $this->grant_project_id,
             'type' => $this->type,
             'amount' => $this->amount,
+            'currency' => $this->currency,
             'transaction_date' => $this->transaction_date?->toDateString(),
             'method' => $this->method,
             'description' => $this->description,

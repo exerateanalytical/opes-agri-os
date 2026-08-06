@@ -81,6 +81,7 @@ return new class extends Migration
             $table->foreignUlid('grant_project_id')->constrained()->cascadeOnDelete();
             $table->string('type'); // receipt|expenditure
             $table->decimal('amount', 15, 2);
+            $table->string('currency', 3)->default('USD'); // must match the parent GrantProject's currency
             $table->date('transaction_date');
             $table->string('method')->nullable(); // cash|bank|mobile_money — which till it moved through
             $table->text('description')->nullable();

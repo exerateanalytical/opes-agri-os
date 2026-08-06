@@ -10,6 +10,7 @@ use App\Models\GrantTransaction;
 use App\Models\Loan;
 use App\Models\PurchaseOrder;
 use App\Support\CurrentCompany;
+use App\Support\Modules;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -29,6 +30,19 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class Dashboard extends Component
 {
     use AuthorizesRequests;
+
+    /** Which module gates each drilldown section — mirrors AnalyticsSummaryService. */
+    protected const DRILLDOWN_MODULES = [
+        'crops' => 'crops',
+        'livestock' => 'livestock',
+        'procurement' => 'procurement',
+        'assets' => 'assets',
+        'cooperative' => 'cooperative',
+        'grants' => 'grants',
+    ];
+
+    /** No section needs — or should be able to ask for — a span longer than this. */
+    public const MAX_RANGE_MONTHS = 24;
 
     #[Url]
     public string $from = '';
@@ -53,13 +67,51 @@ class Dashboard extends Component
 
     public function toggleDrilldown(string $section): void
     {
-        $this->drilldown = $this->drilldown === $section ? '' : $section;
+        if ($this->drilldown === $section) {
+            $this->drilldown = '';
+
+            return;
+        }
+
+        $module = self::DRILLDOWN_MODULES[$section] ?? null;
+        $company = app(CurrentCompany::class)->get();
+
+        if ($module === null || $company === null || ! Modules::enabled($company, $module)) {
+            return;
+        }
+
+        $this->drilldown = $section;
     }
 
     public function clearRange(): void
     {
         $this->from = '';
         $this->to = '';
+    }
+
+    /**
+     * A drilldown section behind a disabled module must never run its
+     * query — the URL param (`?drilldown=cooperative`) is user-controlled
+     * and reaches here regardless of what the summary sections show, so the
+     * same Modules::enabled() gate the summary sections use is enforced
+     * here too, whether `drilldown` was set via toggleDrilldown() or hydrated
+     * straight off the URL.
+     */
+    protected function drilldownAllowed(): bool
+    {
+        if ($this->drilldown === '') {
+            return false;
+        }
+
+        $module = self::DRILLDOWN_MODULES[$this->drilldown] ?? null;
+
+        if ($module === null) {
+            return false;
+        }
+
+        $company = app(CurrentCompany::class)->get();
+
+        return $company !== null && Modules::enabled($company, $module);
     }
 
     /** @return array{0: ?CarbonImmutable, 1: ?CarbonImmutable} */
@@ -70,13 +122,27 @@ class Dashboard extends Component
         }
 
         try {
-            return [
-                CarbonImmutable::parse($this->from)->startOfDay(),
-                CarbonImmutable::parse($this->to)->endOfDay(),
-            ];
+            $from = CarbonImmutable::parse($this->from)->startOfDay();
+            $to = CarbonImmutable::parse($this->to)->endOfDay();
         } catch (\Exception) {
+            $this->addError('to', 'Enter valid From and To dates.');
+
             return [null, null];
         }
+
+        if ($to->lessThan($from)) {
+            $this->addError('to', 'The To date must be on or after the From date.');
+
+            return [null, null];
+        }
+
+        if ($from->diffInMonths($to) > self::MAX_RANGE_MONTHS) {
+            $this->addError('to', 'The date range cannot span more than '.self::MAX_RANGE_MONTHS.' months.');
+
+            return [null, null];
+        }
+
+        return [$from, $to];
     }
 
     /**
@@ -87,6 +153,29 @@ class Dashboard extends Component
      */
     protected function drilldownRows(): Collection
     {
+        $query = $this->drilldownQuery();
+
+        return $query ? $query->limit(200)->get() : collect();
+    }
+
+    /**
+     * How many rows actually match the current drilldown/range, ignoring
+     * the 200-row display cap — so the UI can say "showing 200 of N" rather
+     * than silently truncating with no indicator.
+     */
+    protected function drilldownTotal(): int
+    {
+        $query = $this->drilldownQuery();
+
+        return $query ? $query->toBase()->getCountForPagination() : 0;
+    }
+
+    protected function drilldownQuery(): mixed
+    {
+        if (! $this->drilldownAllowed()) {
+            return null;
+        }
+
         [$from, $to] = $this->range();
 
         return match ($this->drilldown) {
@@ -96,43 +185,31 @@ class Dashboard extends Component
                     $q->whereBetween('planned_planting_date', [$from->toDateString(), $to->toDateString()])
                         ->orWhereBetween('actual_harvest_date', [$from->toDateString(), $to->toDateString()]);
                 }))
-                ->latest('created_at')
-                ->limit(200)
-                ->get(),
+                ->latest('created_at'),
             'livestock' => AnimalProductionRecord::query()
                 ->with('animal')
                 ->when($from && $to,
                     fn ($q) => $q->whereBetween('recorded_on', [$from->toDateString(), $to->toDateString()]),
                     fn ($q) => $q->where('recorded_on', '>=', CarbonImmutable::now()->subMonths(6)->startOfMonth()->toDateString()),
                 )
-                ->latest('recorded_on')
-                ->limit(200)
-                ->get(),
+                ->latest('recorded_on'),
             'procurement' => PurchaseOrder::query()
                 ->with('supplier')
                 ->when($from && $to, fn ($q) => $q->whereBetween('order_date', [$from->toDateString(), $to->toDateString()]))
-                ->latest('order_date')
-                ->limit(200)
-                ->get(),
+                ->latest('order_date'),
             'assets' => AssetMaintenanceRecord::query()
                 ->with('asset')
                 ->when($from && $to, fn ($q) => $q->whereBetween('performed_on', [$from->toDateString(), $to->toDateString()]))
-                ->latest('performed_on')
-                ->limit(200)
-                ->get(),
+                ->latest('performed_on'),
             'cooperative' => Loan::query()
                 ->with('member.contact')
                 ->when($from && $to, fn ($q) => $q->whereBetween('created_at', [$from, $to]))
-                ->latest('created_at')
-                ->limit(200)
-                ->get(),
+                ->latest('created_at'),
             'grants' => GrantTransaction::query()
                 ->with('project')
                 ->when($from && $to, fn ($q) => $q->whereBetween('transaction_date', [$from->toDateString(), $to->toDateString()]))
-                ->latest('transaction_date')
-                ->limit(200)
-                ->get(),
-            default => collect(),
+                ->latest('transaction_date'),
+            default => null,
         };
     }
 
@@ -201,6 +278,7 @@ class Dashboard extends Component
             ),
             'currency' => $company?->currency ?? 'USD',
             'drilldownRows' => $this->drilldown !== '' ? $this->drilldownRows() : collect(),
+            'drilldownTotal' => $this->drilldown !== '' ? $this->drilldownTotal() : 0,
         ])->layout('components.layouts.app', ['title' => 'Analytics', 'active' => 'analytics']);
     }
 }

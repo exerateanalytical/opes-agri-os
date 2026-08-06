@@ -8,9 +8,13 @@ use App\Support\CurrentCompany;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class AnalyticsController extends Controller
 {
+    /** No section needs — or should be able to ask for — a span longer than this. */
+    public const MAX_RANGE_MONTHS = 24;
+
     /**
      * The whole cross-module dashboard in one call — an aggregation, not a
      * resource collection, so a plain JSON shape rather than an API Resource
@@ -35,6 +39,16 @@ class AnalyticsController extends Controller
             'crops_group_by' => ['nullable', 'in:farm'],
             'cooperative_group_by' => ['nullable', 'in:member'],
         ]);
+
+        if (isset($validated['from'], $validated['to'])) {
+            $span = CarbonImmutable::parse($validated['from'])->diffInMonths(CarbonImmutable::parse($validated['to']));
+
+            if ($span > self::MAX_RANGE_MONTHS) {
+                throw ValidationException::withMessages([
+                    'to' => 'The date range cannot span more than '.self::MAX_RANGE_MONTHS.' months.',
+                ]);
+            }
+        }
 
         $company = app(CurrentCompany::class)->get();
 
