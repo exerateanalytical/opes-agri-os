@@ -27,21 +27,42 @@ class LoanRepaymentRecorder
 
     public function record(Loan $loan, User $actor, float $amount, PaymentMethod $method, ?string $paidOn = null, array $options = []): Loan
     {
-        if ($loan->status !== 'active') {
-            throw new RuntimeException('Only an active loan can receive a repayment.');
-        }
-
         $amount = round($amount, 2);
 
         if ($amount <= 0) {
             throw new RuntimeException('Repayment amount must be greater than zero.');
         }
 
-        if ($amount > round((float) $loan->balance, 2) + 0.01) {
-            throw new RuntimeException('This repayment is larger than what remains on the loan.');
-        }
+        $reference = $options['reference'] ?? null;
+        $reference = ($reference === '') ? null : $reference;
 
-        return DB::transaction(function () use ($loan, $actor, $amount, $method, $paidOn, $options) {
+        return DB::transaction(function () use ($loan, $actor, $amount, $method, $paidOn, $options, $reference) {
+            // Re-read under a row lock: two requests recording a repayment
+            // against the same loan at once must not both pass the balance
+            // check on stale data — see PaymentRecorder::record() for the
+            // same guard against the same race.
+            $loan = Loan::query()->lockForUpdate()->findOrFail($loan->getKey());
+
+            // A retried/duplicate request carrying the same client
+            // reference is recognised as the same repayment, not a new
+            // one — replaying it must be harmless rather than either
+            // double-posting the money or erroring the retry away.
+            if ($reference !== null) {
+                $existing = $loan->repayments()->where('reference', $reference)->first();
+
+                if ($existing !== null) {
+                    return $loan;
+                }
+            }
+
+            if ($loan->status !== 'active') {
+                throw new RuntimeException('Only an active loan can receive a repayment.');
+            }
+
+            if ($amount > round((float) $loan->balance, 2) + 0.01) {
+                throw new RuntimeException('This repayment is larger than what remains on the loan.');
+            }
+
             $company = app(CurrentCompany::class)->get();
 
             $totalRepayable = (float) $loan->total_repayable;
@@ -58,7 +79,7 @@ class LoanRepaymentRecorder
                 'interest_portion' => $interestPortion,
                 'method' => $method,
                 'paid_on' => $paidOn ?? now()->toDateString(),
-                'reference' => $options['reference'] ?? null,
+                'reference' => $reference,
                 'notes' => $options['notes'] ?? null,
                 'created_by' => $actor->id,
             ]);

@@ -7,6 +7,7 @@ use App\Models\Contact;
 use App\Models\CooperativeMember;
 use App\Models\JournalEntry;
 use App\Models\Loan;
+use App\Models\LoanRepayment;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ApiTokenIssuer;
@@ -140,6 +141,32 @@ class LoansApiTest extends TestCase
             'amount' => 100000,
             'method' => 'cash',
         ])->assertStatus(409);
+    }
+
+    public function test_a_duplicate_repayment_submission_with_the_same_reference_is_idempotent(): void
+    {
+        $loan = $this->createLoan(principal: 100000, rate: 0.10);
+        $this->api()->postJson("/api/v1/loans/{$loan->id}/disburse", ['method' => 'cash'])->assertOk();
+
+        $payload = [
+            'amount' => 11000,
+            'method' => 'cash',
+            'reference' => 'MOBILE-TXN-4471',
+        ];
+
+        $first = $this->api()->postJson("/api/v1/loans/{$loan->id}/repayments", $payload);
+        $first->assertOk()->assertJsonPath('data.balance', '99000.00');
+
+        // Same idempotency key, same loan, same amount — simulates a
+        // client retry (e.g. a timed-out response resubmitted).
+        $second = $this->api()->postJson("/api/v1/loans/{$loan->id}/repayments", $payload);
+        $second->assertOk()->assertJsonPath('data.balance', '99000.00');
+
+        $this->assertSame(1, $loan->fresh()->repayments()->count());
+        $this->assertSame(
+            1,
+            JournalEntry::query()->where('source_type', LoanRepayment::class)->count()
+        );
     }
 
     public function test_a_pending_loan_cannot_take_a_repayment(): void

@@ -22,11 +22,17 @@ class LoanDisburser
 
     public function disburse(Loan $loan, User $actor, PaymentMethod $method, ?string $disbursedOn = null): Loan
     {
-        if ($loan->status !== 'pending') {
-            throw new RuntimeException('Only a pending loan can be disbursed.');
-        }
-
         return DB::transaction(function () use ($loan, $actor, $method, $disbursedOn) {
+            // Re-read under a row lock: two requests disbursing the same
+            // loan at once must not both pass the pending check on stale
+            // data — see PaymentRecorder::record() for the same guard
+            // against the same race.
+            $loan = Loan::query()->lockForUpdate()->findOrFail($loan->getKey());
+
+            if ($loan->status !== 'pending') {
+                throw new RuntimeException('Only a pending loan can be disbursed.');
+            }
+
             $company = app(CurrentCompany::class)->get();
 
             $principal = round((float) $loan->principal, 2);

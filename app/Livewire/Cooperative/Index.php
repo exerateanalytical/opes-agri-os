@@ -331,8 +331,28 @@ class Index extends Component
             'voteDescription' => ['nullable', 'string'],
         ]);
 
+        $meetingId = $data['voteMeetingId'] ?: null;
+
+        // Same "you must convene before you can decide" gate the API
+        // controller enforces — see CooperativeVoteController::store().
+        if ($meetingId !== null) {
+            $meeting = CooperativeMeeting::findOrFail($meetingId);
+
+            if ($meeting->status !== 'held') {
+                $this->addError('voteMeetingId', 'A vote cannot be opened against a meeting that has not been held yet.');
+
+                return;
+            }
+
+            if (! $meeting->quorumMet()) {
+                $this->addError('voteMeetingId', 'This meeting did not reach quorum, so no vote can be opened against it.');
+
+                return;
+            }
+        }
+
         CooperativeVote::create([
-            'cooperative_meeting_id' => $data['voteMeetingId'] ?: null,
+            'cooperative_meeting_id' => $meetingId,
             'title' => $data['voteTitle'],
             'description' => $data['voteDescription'] ?: null,
             'opened_on' => now()->toDateString(),
@@ -383,9 +403,29 @@ class Index extends Component
             return;
         }
 
+        // Same attendance guard as the API controller — see
+        // CooperativeVoteController::castVote().
+        if ($vote->cooperative_meeting_id !== null) {
+            $meeting = $vote->meeting;
+
+            if ($meeting !== null && $meeting->quorum_required > 0) {
+                $attended = $meeting->attendances()
+                    ->where('cooperative_member_id', $data['ballotMemberId'])
+                    ->exists();
+
+                if (! $attended) {
+                    $this->addError('ballotMemberId', 'Only a member who attended this meeting can vote on a resolution raised there.');
+
+                    return;
+                }
+            }
+        }
+
+        $member = CooperativeMember::findOrFail($data['ballotMemberId']);
+
         $vote->ballots()->firstOrCreate(
             ['cooperative_member_id' => $data['ballotMemberId']],
-            ['choice' => $data['ballotChoice']],
+            ['choice' => $data['ballotChoice'], 'weight_at_cast' => $member->vote_weight],
         );
 
         $this->ballotMemberId = '';

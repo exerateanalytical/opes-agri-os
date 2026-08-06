@@ -64,9 +64,15 @@ class CooperativeVote extends Model
             return $result + ['total' => array_sum($result)];
         }
 
+        // Sums the weight snapshotted onto each ballot at cast time
+        // (`weight_at_cast`), not a live join against the member's current
+        // `vote_weight` — a member's weight changing after the fact (or
+        // after the vote closed) must never retroactively rewrite a tally.
+        // `COALESCE(..., 1)` covers a ballot cast before this column
+        // existed, reading as the one-member-one-vote default it always
+        // implicitly carried.
         $counts = $this->ballots()
-            ->join('cooperative_members', 'cooperative_members.id', '=', 'vote_ballots.cooperative_member_id')
-            ->selectRaw('choice, sum(cooperative_members.vote_weight) as total')
+            ->selectRaw('choice, sum(coalesce(weight_at_cast, 1)) as total')
             ->groupBy('choice')
             ->pluck('total', 'choice');
 

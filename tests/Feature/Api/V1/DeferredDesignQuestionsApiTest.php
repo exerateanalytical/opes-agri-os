@@ -239,7 +239,15 @@ class DeferredDesignQuestionsApiTest extends TestCase
         ])->assertCreated();
     }
 
-    public function test_a_vote_can_open_against_a_scheduled_meeting_not_yet_held(): void
+    /**
+     * Hardening (2026-08-06): a scheduled meeting used to be free to open a
+     * vote against — quorum was only checked once `status` reached `held`,
+     * so simply never flipping status skipped the gate entirely, whether or
+     * not the meeting ever gathered any attendance at all. `held` is now
+     * required before any vote can be raised in front of a meeting, full
+     * stop; see CooperativeVoteController::store().
+     */
+    public function test_a_vote_cannot_open_against_a_scheduled_meeting_not_yet_held(): void
     {
         $meeting = CooperativeMeeting::create([
             'title' => 'AGM', 'scheduled_on' => '2026-09-01', 'quorum_required' => 5, 'status' => 'scheduled',
@@ -248,6 +256,8 @@ class DeferredDesignQuestionsApiTest extends TestCase
         $this->api()->postJson('/api/v1/cooperative-votes', [
             'title' => 'Approve the new bylaws',
             'cooperative_meeting_id' => $meeting->id,
-        ])->assertCreated();
+        ])->assertStatus(409);
+
+        $this->assertSame(0, CooperativeVote::count());
     }
 }

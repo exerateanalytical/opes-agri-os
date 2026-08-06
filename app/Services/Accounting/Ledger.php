@@ -9,6 +9,7 @@ use App\Models\LedgerAccount;
 use App\Models\User;
 use App\Support\Accounting\ChartOfAccounts;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -64,22 +65,39 @@ class Ledger
         }
 
         return DB::transaction(function () use ($company, $journal, $entryDate, $resolved, $source, $narration, $reference, $actor) {
-            if ($source !== null && $existing = $this->entryFor($company, $source)) {
+            // Locked so two concurrent posts for the same source serialise on
+            // the check rather than both reading "nothing yet" and both
+            // inserting — the check-then-insert this closes over is the
+            // whole reason a unique index exists on the table underneath it.
+            if ($source !== null && $existing = $this->entryFor($company, $source, lock: true)) {
                 // Already recorded. Returning the original rather than throwing
                 // keeps the caller's retry harmless, which is the point.
                 return $existing;
             }
 
-            $entry = JournalEntry::create([
-                'company_id' => $company->id,
-                'journal' => $journal,
-                'entry_date' => $entryDate,
-                'reference' => $reference,
-                'narration' => $narration,
-                'source_type' => $source ? $source::class : null,
-                'source_id' => $source?->getKey(),
-                'created_by' => $actor?->id,
-            ]);
+            try {
+                $entry = JournalEntry::create([
+                    'company_id' => $company->id,
+                    'journal' => $journal,
+                    'entry_date' => $entryDate,
+                    'reference' => $reference,
+                    'narration' => $narration,
+                    'source_type' => $source ? $source::class : null,
+                    'source_id' => $source?->getKey(),
+                    'created_by' => $actor?->id,
+                ]);
+            } catch (QueryException $e) {
+                // Belt-and-braces: the lockForUpdate() above should already
+                // make this unreachable outside a genuine race the app-level
+                // check couldn't see coming, but the unique index is the
+                // real guarantee. Recover the same way a caught duplicate
+                // always does here — return what's already posted.
+                if ($source !== null && $this->isUniqueViolation($e) && $existing = $this->entryFor($company, $source)) {
+                    return $existing;
+                }
+
+                throw $e;
+            }
 
             foreach ($resolved as $index => $line) {
                 JournalLine::create([
@@ -136,7 +154,7 @@ class Ledger
     }
 
     /** The entry already recorded for a source, if there is one. */
-    public function entryFor(Company $company, Model $source): ?JournalEntry
+    public function entryFor(Company $company, Model $source, bool $lock = false): ?JournalEntry
     {
         return JournalEntry::query()
             ->withoutGlobalScopes()
@@ -144,7 +162,14 @@ class Ledger
             ->where('source_type', $source::class)
             ->where('source_id', $source->getKey())
             ->whereNull('reverses_entry_id')
+            ->when($lock, fn ($q) => $q->lockForUpdate())
             ->first();
+    }
+
+    /** Whether a query failure was the source uniqueness guard, not some other integrity error. */
+    protected function isUniqueViolation(QueryException $e): bool
+    {
+        return in_array($e->getCode(), ['23000', '23505'], true);
     }
 
     /**

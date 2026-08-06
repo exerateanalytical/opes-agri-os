@@ -507,3 +507,30 @@ Crops) found four confirmed defects, fixed here:
 Left as a documented gap, not fixed in this pass: `recordQuietly()` swallowing a ledger-posting failure
 on harvest is a deliberate pattern shared with Grants and Livestock, not specific to Agri — a consistent
 fix across every caller is its own cross-cutting piece of work, out of scope here.
+**Hardening (2026-08-06):** a read-only audit of the Cooperative module found the quorum gate above could
+be bypassed entirely by simply never flipping a meeting to `held` (attendance is recorded independently of
+status, and the gate only ever fired on `status === 'held'`), plus three related issues. All four fixed in
+one pass:
+
+- **Quorum gate closed for real.** `CooperativeVoteController::store()` (and the mirrored path in
+  `Livewire\Cooperative\Index::saveVote()`) now refuses to open *any* vote against a meeting that is not
+  `held`, not just one that is held-but-under-quorum — "you must convene before you can decide" is now an
+  invariant on meeting status, not a side effect of remembering to check it. `castVote()` gained the
+  matching per-ballot guard: a member with no `MeetingAttendance` row for a vote's meeting cannot cast a
+  ballot when that meeting tracks quorum.
+- **Weighted tally stopped re-reading live weight.** `vote_ballots.weight_at_cast` (new, nullable decimal)
+  snapshots a member's `vote_weight` the moment a ballot is cast; `CooperativeVote::tally()` sums that
+  column (`COALESCE(..., 1)` for pre-existing ballots) instead of joining `cooperative_members` live, so a
+  member's weight changing later — even after the vote closes — can no longer rewrite a settled result.
+- **Loan repayments made idempotent.** `LoanRepaymentRecorder::record()` now takes the existing `reference`
+  field as an optional client idempotency key: a repayment carrying a `reference` already recorded against
+  that loan is recognised as a retry and returns the existing state rather than posting a second journal
+  entry, backed by a `(loan_id, reference)` unique index. Both `LoanRepaymentRecorder` and `LoanDisburser`
+  also gained the `lockForUpdate()` re-fetch-then-check pattern `PaymentRecorder`/`DocumentIssuer` already
+  use, closing the same concurrent-double-pass-the-balance-check race those guard against.
+- **Ledger idempotency backed by the database, not just application logic.** A unique index on
+  `journal_entries(company_id, source_type, source_id)` (MySQL's null-distinct behaviour already handles
+  the many sourceless entries correctly) means `Ledger::entryFor()`'s check-then-insert is now enforced
+  even under real concurrency; `Ledger::post()` locks that check with `lockForUpdate()` and additionally
+  catches a unique-constraint violation and returns the entry that won the race, so every poster built on
+  `Ledger` (loans, grants, harvests, livestock) gets the guarantee from one place.
