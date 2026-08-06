@@ -4,6 +4,7 @@ namespace Tests\Feature\Api\V1;
 
 use App\Models\Company;
 use App\Models\FixedAsset;
+use App\Models\FleetTrip;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ApiTokenIssuer;
@@ -13,6 +14,7 @@ use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class FleetTripsApiTest extends TestCase
@@ -88,6 +90,27 @@ class FleetTripsApiTest extends TestCase
             'started_on' => '2026-08-01',
             'start_odometer' => 10000,
             'end_odometer' => 9000,
+        ])->assertStatus(422);
+    }
+
+    public function test_the_model_rejects_a_decreasing_odometer_even_bypassing_the_form_request(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        FleetTrip::create([
+            'fixed_asset_id' => $this->van->id,
+            'started_on' => '2026-08-01',
+            'start_odometer' => 10000,
+            'end_odometer' => 9000,
+        ]);
+    }
+
+    public function test_a_trip_cannot_be_logged_against_a_disposed_asset(): void
+    {
+        $this->van->forceFill(['status' => 'disposed', 'disposed_on' => '2026-07-01'])->save();
+
+        $this->api()->postJson("/api/v1/fixed-assets/{$this->van->id}/trips", [
+            'started_on' => '2026-08-01',
         ])->assertStatus(422);
     }
 

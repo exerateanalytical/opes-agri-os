@@ -358,6 +358,37 @@ confirmed defects, fixed here:
   real-world pedigrees are rare and portability across the supported DB engines isn't guaranteed for
   recursive queries.
 
+**2026-08-06 — Hardening: Machinery/Utilities/Fleet/Traceability audit fixes.** A read-only audit of these
+four modules found the following, fixed here:
+
+- `UtilityReading.meter_reading`/`consumption` had no cross-validation against the account's reading
+  history — a reading could be entered out of order or with a meter value lower than the previous one with
+  nothing catching it. This domain has no "correction" concept the way `AnimalBatchAdjustment` does
+  (`type: correction`), so out-of-order entry is now simply rejected rather than specially supported. A new
+  `App\Domain\Utilities\Support\ReadingConsistency::check()` — shared by `StoreUtilityReadingRequest` and
+  the `RecordReading` Livewire form so the two rules can't drift apart — rejects a `read_on` earlier than
+  the account's most recent reading, and rejects a `meter_reading` lower than the previous one unless a new
+  `meter_reset` boolean is set. The flag exists because the `utility_readings` migration's own comment
+  already anticipated this ("a meter can be replaced or reset between readings"); `consumption` stays
+  exactly the manually-entered field it always was — nothing here derives it from the meter delta.
+- `ItemController::traceBatch()` loaded a batch's entire movement history with an unbounded `->get()`,
+  unlike every other list endpoint in the API. Switched to `cursorPaginate()` (25/page, matching
+  `ItemController::index()`/`UtilityAccountController::index()`), ordered by `occurred_at` then `id` for a
+  stable cursor.
+- Three more unpaginated history endpoints, same mechanical fix: `UtilityAccountController::readings()`,
+  `FleetTripController::index()`, `AssetMaintenanceRecordController::index()` — all now `cursorPaginate()`
+  instead of `->get()`. None of the existing tests asserted a shape other than the `data` array `cursorPaginate()`
+  still returns, so no test-shape changes were needed beyond the batch-trace ordering tiebreak.
+- `FleetTrip` relied solely on `StoreFleetTripRequest`'s `gte:start_odometer` rule to keep `end_odometer`
+  from going negative relative to `start_odometer` — nothing stopped a future edit/import path (mass
+  assignment is wide open via `guarded = ['id']`) from writing a negative distance directly through the
+  model. Added a `static::saving()` guard on `FleetTrip` that throws a `ValidationException` whenever both
+  odometer readings are present and `end_odometer < start_odometer`, independent of which caller reached
+  the model.
+- Cheap and worth doing: `FleetTripController::store()` and `AssetMaintenanceRecordController::store()` now
+  refuse to create a trip/maintenance record against an asset where `FixedAsset::isDisposed()` is true —
+  that check already existed on the model for depreciation purposes and wasn't being used here.
+
 ## 5. Documentation approach
 
 Per-module specs are written **just before that module is built**, not all up front — this doc stays short

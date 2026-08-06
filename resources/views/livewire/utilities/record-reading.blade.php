@@ -19,6 +19,12 @@
                     <label class="block">
                         <span class="{{ $labelClass }}">Meter reading (optional)</span>
                         <input type="number" step="0.01" wire:model="meterReading" class="{{ $inputClass }}">
+                        @error('meter_reading') <p class="mt-1 text-[12.5px] font-medium text-negative">{{ $message }}</p> @enderror
+                        @error('read_on') <p class="mt-1 text-[12.5px] font-medium text-negative">{{ $message }}</p> @enderror
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" wire:model="meterReset" class="h-4 w-4 rounded border-border">
+                        <span class="text-[13px] font-medium text-ink-2">Meter was replaced or reset</span>
                     </label>
                     <label class="block">
                         <span class="{{ $labelClass }}">Consumption (optional)</span>

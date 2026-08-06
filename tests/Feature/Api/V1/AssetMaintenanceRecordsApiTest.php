@@ -81,6 +81,17 @@ class AssetMaintenanceRecordsApiTest extends TestCase
             ->assertOk()->assertJsonCount(1, 'data');
     }
 
+    public function test_maintenance_cannot_be_recorded_against_a_disposed_asset(): void
+    {
+        $this->asset->forceFill(['status' => 'disposed', 'disposed_on' => '2026-07-01'])->save();
+
+        $this->api()->postJson("/api/v1/fixed-assets/{$this->asset->id}/maintenance-records", [
+            'maintenance_type' => 'service',
+            'description' => 'Oil change',
+            'performed_on' => '2026-08-01',
+        ])->assertStatus(422);
+    }
+
     public function test_a_token_without_the_record_maintenance_ability_is_refused(): void
     {
         $limitedToken = app(ApiTokenIssuer::class)

@@ -69,6 +69,55 @@ class UtilitiesTest extends TestCase
         $this->assertSame(1, $account->readings()->count());
     }
 
+    public function test_a_backdated_reading_is_rejected(): void
+    {
+        $account = UtilityAccount::create(['utility_type' => 'water', 'status' => 'active']);
+        $account->readings()->create(['read_on' => '2026-08-10', 'meter_reading' => 100]);
+
+        Livewire::actingAs($this->owner)
+            ->test(RecordReading::class)
+            ->call('open', $account->id)
+            ->set('readOn', '2026-08-01')
+            ->set('meterReading', '110')
+            ->call('save')
+            ->assertHasErrors('read_on');
+
+        $this->assertSame(1, $account->readings()->count());
+    }
+
+    public function test_a_decreasing_meter_reading_is_rejected_without_a_reset(): void
+    {
+        $account = UtilityAccount::create(['utility_type' => 'water', 'status' => 'active']);
+        $account->readings()->create(['read_on' => '2026-08-01', 'meter_reading' => 100]);
+
+        Livewire::actingAs($this->owner)
+            ->test(RecordReading::class)
+            ->call('open', $account->id)
+            ->set('readOn', '2026-08-10')
+            ->set('meterReading', '50')
+            ->call('save')
+            ->assertHasErrors('meter_reading');
+
+        $this->assertSame(1, $account->readings()->count());
+    }
+
+    public function test_a_decreasing_meter_reading_is_allowed_when_flagged_as_a_reset(): void
+    {
+        $account = UtilityAccount::create(['utility_type' => 'water', 'status' => 'active']);
+        $account->readings()->create(['read_on' => '2026-08-01', 'meter_reading' => 100]);
+
+        Livewire::actingAs($this->owner)
+            ->test(RecordReading::class)
+            ->call('open', $account->id)
+            ->set('readOn', '2026-08-10')
+            ->set('meterReading', '5')
+            ->set('meterReset', true)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame(2, $account->readings()->count());
+    }
+
     public function test_a_disabled_utilities_module_hides_the_page(): void
     {
         $this->company->forceFill(['modules' => ['utilities' => false]])->save();

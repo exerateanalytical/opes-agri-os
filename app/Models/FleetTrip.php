@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Validation\ValidationException;
 
 /** Dies with its asset via cascade — no SoftDeletes needed, same as AssetMaintenanceRecord. */
 class FleetTrip extends Model
@@ -14,6 +15,20 @@ class FleetTrip extends Model
     use HasUlids;
 
     protected $guarded = ['id'];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $trip) {
+            if ($trip->start_odometer !== null
+                && $trip->end_odometer !== null
+                && (float) $trip->end_odometer < (float) $trip->start_odometer
+            ) {
+                throw ValidationException::withMessages([
+                    'end_odometer' => 'End odometer cannot be less than the start odometer.',
+                ]);
+            }
+        });
+    }
 
     protected function casts(): array
     {

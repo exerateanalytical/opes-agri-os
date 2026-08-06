@@ -61,12 +61,15 @@ class UtilityAccountController extends Controller
         return response()->json(status: 204);
     }
 
-    public function readings(UtilityAccount $utilityAccount): AnonymousResourceCollection
+    public function readings(Request $request, UtilityAccount $utilityAccount): AnonymousResourceCollection
     {
         $this->authorize('view', $utilityAccount);
 
         return UtilityReadingResource::collection(
-            $utilityAccount->readings()->orderByDesc('read_on')->get()
+            $utilityAccount->readings()
+                ->orderByDesc('read_on')
+                ->orderByDesc('id')
+                ->cursorPaginate((int) $request->integer('per_page', 25))
         );
     }
 

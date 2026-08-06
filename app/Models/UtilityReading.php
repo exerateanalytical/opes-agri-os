@@ -20,6 +20,7 @@ class UtilityReading extends Model
         return [
             'read_on' => 'date',
             'meter_reading' => 'decimal:2',
+            'meter_reset' => 'boolean',
             'consumption' => 'decimal:2',
             'cost' => 'decimal:2',
         ];

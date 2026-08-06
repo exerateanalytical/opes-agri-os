@@ -67,7 +67,7 @@ class ItemController extends Controller
      * (see docs/architecture/agri-platform-roadmap.md); this just reads it
      * back rather than adding anywhere new for it to be recorded.
      */
-    public function traceBatch(Item $item, string $batchNumber): AnonymousResourceCollection
+    public function traceBatch(Request $request, Item $item, string $batchNumber): AnonymousResourceCollection
     {
         $this->authorize('view', $item);
 
@@ -75,7 +75,8 @@ class ItemController extends Controller
             ->where('item_id', $item->id)
             ->where('batch_number', $batchNumber)
             ->orderBy('occurred_at')
-            ->get();
+            ->orderBy('id')
+            ->cursorPaginate((int) $request->integer('per_page', 25));
 
         return StockMovementResource::collection($movements);
     }

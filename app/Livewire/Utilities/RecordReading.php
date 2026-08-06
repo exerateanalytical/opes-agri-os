@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Utilities;
 
+use App\Domain\Utilities\Support\ReadingConsistency;
 use App\Models\UtilityAccount;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -18,6 +19,8 @@ class RecordReading extends Component
 
     public string $meterReading = '';
 
+    public bool $meterReset = false;
+
     public string $consumption = '';
 
     public string $cost = '';
@@ -31,6 +34,7 @@ class RecordReading extends Component
         $this->accountId = $account->id;
         $this->readOn = now()->toDateString();
         $this->meterReading = '';
+        $this->meterReset = false;
         $this->consumption = '';
         $this->cost = '';
     }
@@ -52,9 +56,19 @@ class RecordReading extends Component
         $account = UtilityAccount::findOrFail($this->accountId);
         $this->authorize('recordReading', $account);
 
+        $meterReading = $data['meterReading'] !== '' ? (float) $data['meterReading'] : null;
+
+        ReadingConsistency::check(
+            account: $account,
+            readOn: $data['readOn'],
+            meterReading: $meterReading,
+            meterReset: $this->meterReset,
+        );
+
         $account->readings()->create([
             'read_on' => $data['readOn'],
-            'meter_reading' => $data['meterReading'] !== '' ? $data['meterReading'] : null,
+            'meter_reading' => $meterReading,
+            'meter_reset' => $this->meterReset,
             'consumption' => $data['consumption'] !== '' ? $data['consumption'] : null,
             'cost' => $data['cost'] !== '' ? $data['cost'] : null,
             'created_by' => auth()->id(),

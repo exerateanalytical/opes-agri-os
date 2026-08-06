@@ -82,6 +82,43 @@ class UtilityAccountsApiTest extends TestCase
             ->assertOk()->assertJsonCount(1, 'data');
     }
 
+    public function test_it_rejects_a_backdated_reading(): void
+    {
+        app(CurrentCompany::class)->set($this->company);
+        $account = UtilityAccount::create(['utility_type' => 'water', 'status' => 'active']);
+        $account->readings()->create(['read_on' => '2026-08-10', 'meter_reading' => 100]);
+
+        $this->api()->postJson("/api/v1/utility-accounts/{$account->id}/readings", [
+            'read_on' => '2026-08-01',
+            'meter_reading' => 110,
+        ])->assertStatus(422)->assertJsonPath('error.details.read_on.0', fn ($m) => str_contains($m, 'in order'));
+    }
+
+    public function test_it_rejects_a_decreasing_meter_reading_without_a_reset(): void
+    {
+        app(CurrentCompany::class)->set($this->company);
+        $account = UtilityAccount::create(['utility_type' => 'water', 'status' => 'active']);
+        $account->readings()->create(['read_on' => '2026-08-01', 'meter_reading' => 100]);
+
+        $this->api()->postJson("/api/v1/utility-accounts/{$account->id}/readings", [
+            'read_on' => '2026-08-10',
+            'meter_reading' => 50,
+        ])->assertStatus(422)->assertJsonPath('error.details.meter_reading.0', fn ($m) => str_contains($m, 'reset'));
+    }
+
+    public function test_it_allows_a_decreasing_meter_reading_when_flagged_as_a_reset(): void
+    {
+        app(CurrentCompany::class)->set($this->company);
+        $account = UtilityAccount::create(['utility_type' => 'water', 'status' => 'active']);
+        $account->readings()->create(['read_on' => '2026-08-01', 'meter_reading' => 100]);
+
+        $this->api()->postJson("/api/v1/utility-accounts/{$account->id}/readings", [
+            'read_on' => '2026-08-10',
+            'meter_reading' => 5,
+            'meter_reset' => true,
+        ])->assertCreated();
+    }
+
     public function test_a_token_without_the_record_reading_ability_is_refused(): void
     {
         app(CurrentCompany::class)->set($this->company);
