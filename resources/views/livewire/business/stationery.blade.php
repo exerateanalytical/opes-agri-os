@@ -156,7 +156,7 @@
                     <p class="mt-3 text-[12.5px] text-muted">Standard 85 × 55&nbsp;mm. Both sides shown.</p>
                 @elseif ($asset === 'stamp')
                     <span class="{{ $labelClass }}">Shape</span>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
                         @foreach (['circular' => 'Circle', 'square' => 'Square', 'oval' => 'Oval'] as $key => $label)
                             <button type="button" wire:click="$set('stampShape', '{{ $key }}')"
                                     class="focusable h-11 rounded-xl text-[13.5px] font-semibold transition-colors

@@ -36,7 +36,7 @@
             </p>
         @endif
 
-        <dl class="mt-5 grid grid-cols-3 gap-3 border-t border-border pt-4">
+        <dl class="mt-5 grid grid-cols-1 gap-3 border-t border-border pt-4 min-[400px]:grid-cols-3">
             @foreach ([
                 ['Commission', $summary['earned'], 'text-positive'],
                 ['Card fees', $summary['fees'], 'text-ink-2'],
@@ -96,7 +96,7 @@
         </div>
     @endif
 
-    <div class="mt-4 grid grid-cols-3 gap-3">
+    <div class="mt-4 grid grid-cols-1 gap-3 min-[400px]:grid-cols-3">
         @foreach ([
             ['Clients', $summary['clients'], 'users'],
             ['Signed up', $summary['converted'], 'check-circle'],

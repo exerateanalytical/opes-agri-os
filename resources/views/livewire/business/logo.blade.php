@@ -29,7 +29,7 @@
         <div class="space-y-4">
             <x-ui.panel title="Style">
                 <span class="mb-1.5 block text-[13px] font-semibold text-ink-2">Colour</span>
-                <div class="grid grid-cols-4 gap-2">
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     @foreach (LogoComposer::PALETTES as $key => [$primary, $secondary])
                         <button type="button" wire:click="$set('palette', '{{ $key }}')"
                                 aria-label="{{ ucfirst($key) }} palette"
@@ -39,7 +39,7 @@
                 </div>
 
                 <span class="mb-1.5 mt-4 block text-[13px] font-semibold text-ink-2">Mark</span>
-                <div class="grid grid-cols-4 gap-2">
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     @foreach (LogoComposer::MARKS as $option)
                         <button type="button" wire:click="$set('mark', '{{ $option }}')"
                                 class="focusable h-10 rounded-xl text-[12px] font-semibold capitalize transition-colors
@@ -50,7 +50,7 @@
                 </div>
 
                 <span class="mb-1.5 mt-4 block text-[13px] font-semibold text-ink-2">Layout</span>
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     @foreach (LogoComposer::LAYOUTS as $option)
                         <button type="button" wire:click="$set('layout', '{{ $option }}')"
                                 class="focusable h-10 rounded-xl text-[12.5px] font-semibold capitalize transition-colors

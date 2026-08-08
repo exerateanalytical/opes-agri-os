@@ -534,3 +534,6 @@ one pass:
   even under real concurrency; `Ledger::post()` locks that check with `lockForUpdate()` and additionally
   catches a unique-constraint violation and returns the entry that won the race, so every poster built on
   `Ledger` (loans, grants, harvests, livestock) gets the guarantee from one place.
+
+**Mobile responsiveness audit + fix pass (2026-08-08):** swept 12 bare grid-cols instances across 9 Blade
+files to add responsive breakpoints; nav/modals/charts/tables already correct, no changes needed there.

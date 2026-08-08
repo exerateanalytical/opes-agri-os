@@ -74,7 +74,7 @@
     <div class="mx-auto mt-5 max-w-[640px] space-y-4" x-show="! savedOffline">
 
         @unless ($contact)
-            <div class="grid grid-cols-4 gap-2">
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 @foreach (Index::TYPES as $key => $label)
                     <button type="button" @click="form.type = @js($key)"
                             class="focusable h-11 rounded-xl text-[13px] font-semibold transition-colors"

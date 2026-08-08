@@ -81,7 +81,7 @@
                     <div class="space-y-4">
                         <div>
                             <span class="mb-1.5 block text-[13px] font-semibold text-ink-2">Plan</span>
-                            <div class="grid grid-cols-3 gap-2">
+                            <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
                                 @foreach (\App\Support\PlanEntitlements::PLANS as $p)
                                     <label wire:key="plan-{{ $p }}"
                                            class="cursor-pointer rounded-xl border p-3 text-center transition-colors {{ $plan === $p ? 'border-brand bg-tint-blue' : 'border-border hover:bg-surface-2' }}">

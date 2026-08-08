@@ -53,7 +53,7 @@
                         </select>
                     </label>
                 </div>
-                <div class="grid grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <label class="block">
                         <span class="{{ $labelClass }}">Total amount</span>
                         <input type="number" step="0.01" wire:model="totalAmount" class="{{ $inputClass }}">

@@ -231,7 +231,7 @@
                                 <input type="number" step="0.01" wire:model="soilOrganicMatter" class="{{ $inputClass }}">
                             </label>
                         </div>
-                        <div class="grid grid-cols-3 gap-3">
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                             <label class="block">
                                 <span class="{{ $labelClass }}">N (ppm)</span>
                                 <input type="number" step="0.01" wire:model="soilNitrogen" class="{{ $inputClass }}">

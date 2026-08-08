@@ -54,7 +54,7 @@
         <div class="mt-4 space-y-4 lg:mt-4 lg:grid lg:grid-cols-11 lg:gap-4 lg:space-y-0">
 
             <x-ui.panel title="Quick Actions" action="See All" :action-href="route('sales')" class="lg:col-span-5">
-                <div class="grid grid-cols-4 gap-x-2 gap-y-5">
+                <div class="grid grid-cols-2 gap-x-2 gap-y-5 sm:grid-cols-4">
                     @foreach (\App\Support\Navigation::quickActions() as $action)
                         <x-ui.quick-action
                             :label="$action['label']"
